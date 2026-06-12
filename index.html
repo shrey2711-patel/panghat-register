@@ -4324,33 +4324,33 @@ document.addEventListener('DOMContentLoaded', () => {
     console.error("Flatpickr initialization failed:", err);
   }
   
-  // Pre-load and enable private Firebase Cloud Sync silently on first run or if never initialized
+  // Initialize Firebase Cloud Sync settings on first run (only if completely empty)
   const fbEnabled = localStorage.getItem('MMC_FIREBASE_ENABLED');
-  if (fbEnabled === null || fbEnabled === undefined || !localStorage.getItem('MMC_FIREBASE_PROJECT_ID')) {
-    localStorage.setItem('MMC_FIREBASE_ENABLED', 'true'); // Auto-enable Cloud Sync!
-    localStorage.setItem('MMC_FIREBASE_API_KEY', 'AIzaSyCP0aG1KnrQEvSHY4Os1o0secaKIe4T4zo');
-    localStorage.setItem('MMC_FIREBASE_PROJECT_ID', 'panghat-register');
-    localStorage.setItem('MMC_FIREBASE_AUTH_DOMAIN', 'panghat-register.firebaseapp.com');
-    localStorage.setItem('MMC_FIREBASE_STORAGE_BUCKET', 'panghat-register.firebasestorage.app');
-    localStorage.setItem('MMC_FIREBASE_SENDER_ID', '737134243462');
-    localStorage.setItem('MMC_FIREBASE_APP_ID', '1:737134243462:web:b0e671e410d4f6f0c2eb07');
-  }
+  const hasCustomKeys = localStorage.getItem('MMC_FIREBASE_API_KEY') && localStorage.getItem('MMC_FIREBASE_PROJECT_ID');
   
-  // Force upgrade/correction of old default database keys in local storage
-  if (localStorage.getItem('MMC_FIREBASE_PROJECT_ID') === 'midas-money-care-insurance-reg' || 
-      localStorage.getItem('MMC_FIREBASE_API_KEY') === 'AIzaSyCszSmi11-Nbj76U9dJEYDezbJayK2btko' ||
-      localStorage.getItem('MMC_FIREBASE_PROJECT_ID') === 'gic-register-ab710') {
+  // Only set defaults on first run - never overwrite user-configured keys
+  if (!fbEnabled || fbEnabled === 'undefined') {
+    // First time setup - enable cloud sync with demo config
     localStorage.setItem('MMC_FIREBASE_ENABLED', 'true');
-    localStorage.setItem('MMC_FIREBASE_API_KEY', 'AIzaSyCP0aG1KnrQEvSHY4Os1o0secaKIe4T4zo');
-    localStorage.setItem('MMC_FIREBASE_PROJECT_ID', 'panghat-register');
-    localStorage.setItem('MMC_FIREBASE_AUTH_DOMAIN', 'panghat-register.firebaseapp.com');
-    localStorage.setItem('MMC_FIREBASE_STORAGE_BUCKET', 'panghat-register.firebasestorage.app');
-    localStorage.setItem('MMC_FIREBASE_SENDER_ID', '737134243462');
-    localStorage.setItem('MMC_FIREBASE_APP_ID', '1:737134243462:web:b0e671e410d4f6f0c2eb07');
+    // Only set demo keys if user hasn't configured custom ones
+    if (!hasCustomKeys) {
+      localStorage.setItem('MMC_FIREBASE_API_KEY', 'AIzaSyCP0aG1KnrQEvSHY4Os1o0secaKIe4T4zo');
+      localStorage.setItem('MMC_FIREBASE_PROJECT_ID', 'panghat-register');
+      localStorage.setItem('MMC_FIREBASE_AUTH_DOMAIN', 'panghat-register.firebaseapp.com');
+      localStorage.setItem('MMC_FIREBASE_STORAGE_BUCKET', 'panghat-register.firebasestorage.app');
+      localStorage.setItem('MMC_FIREBASE_SENDER_ID', '737134243462');
+      localStorage.setItem('MMC_FIREBASE_APP_ID', '1:737134243462:web:b0e671e410d4f6f0c2eb07');
+    }
   }
   
+  // NOTE: Keys are now persistent across reloads and will sync to all devices using the same Firebase config
+  logActivity("🔧 Firebase Cloud Sync initialized with stored credentials.", "info");
+  
+  // Initialize Firebase immediately so cross-device sync starts right away
   setTimeout(() => {
-    initFirebase();
+    if (initFirebase()) {
+      logActivity("☁️ Cloud sync enabled - data will sync across all logged-in devices.", "info");
+    }
   }, 800);
 });
 </script>
