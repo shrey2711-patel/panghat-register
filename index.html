@@ -1,0 +1,4360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panghat Gift Shop - Expiry Register</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<!-- FontAwesome Icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<!-- SheetJS Library for Excel Import/Export -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<!-- EmailJS Browser SDK for Real Email OTP delivery -->
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+<!-- Firebase Web Compat SDKs for Free Cloud Sync -->
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
+<!-- ChartJS Library for Interactive Visual Analytics & Charts -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Flatpickr (Modern Date Picker) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+<style>
+  :root {
+    --pumpkin-spice: #ff6700ff;
+    --platinum: #ebebebff;
+    --silver: #c0c0c0ff;
+    --cornflower-ocean: #3a6ea5ff;
+    --steel-azure: #004e98ff;
+
+    --bg: var(--platinum);
+    --card-bg: rgba(255, 255, 255, 0.95);
+    --card-border: rgba(0, 0, 0, 0.1);
+    --border: var(--silver);
+    --accent: var(--steel-azure);
+    --accent-glow: rgba(0, 78, 152, 0.05);
+    --accent-hover: var(--cornflower-ocean);
+    --red: #d32f2f;
+    --red-dim: #ffebee;
+    --orange: var(--pumpkin-spice);
+    --orange-dim: rgba(255, 103, 0, 0.1);
+    --amber: #f59e0b;
+    --amber-dim: #fef3c7;
+    --blue: var(--cornflower-ocean);
+    --blue-dim: rgba(58, 110, 165, 0.1);
+    --purple: #8b5cf6;
+    --purple-dim: #ede9fe;
+    --text: #0f172a;
+    --text-muted: #64748b;
+    --text-dark: #ffffff;
+    --shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
+    --radius: 12px;
+    --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: radial-gradient(circle at 0% 0%, var(--platinum) 0%, #ffffff 50%), 
+                radial-gradient(circle at 100% 100%, var(--silver) 0%, #ffffff 100%);
+    background-attachment: fixed;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grid Layout */
+  .app-container {
+    display: grid;
+    grid-template-columns: 1fr;
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 0;
+  }
+
+  @media (min-width: 1200px) {
+    .app-container {
+      grid-template-columns: 280px 1fr;
+    }
+  }
+
+  /* Sidebar Drawer */
+  aside {
+    background: rgba(235, 235, 235, 0.65);
+    border-right: 1px solid var(--border);
+    backdrop-filter: blur(20px);
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+    height: 100vh;
+    position: sticky;
+    top: 0;
+    z-index: 90;
+    overflow-y: auto;
+  }
+
+  @media (max-width: 1199px) {
+    aside {
+      height: auto;
+      position: relative;
+      border-right: none;
+      border-bottom: 1px solid var(--border);
+    }
+  }
+
+  /* Main Workspace */
+  main {
+    padding: 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    overflow-x: hidden;
+  }
+
+  @media (max-width: 600px) {
+    main { padding: 16px; gap: 16px; }
+  }
+
+  /* Header Branding */
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .brand-icon {
+    width: 44px; height: 44px;
+    background: linear-gradient(135deg, var(--accent) 0%, #333333 100%);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    color: #fff;
+    box-shadow: 0 0 20px var(--accent-glow);
+  }
+
+  .brand-text h1 {
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+  }
+
+  .brand-text p {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-family: 'DM Mono', monospace;
+  }
+
+  /* Navigation Options */
+  .nav-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .nav-title {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+
+  .nav-btn {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    color: var(--text-muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13.5px;
+    font-weight: 500;
+    cursor: pointer;
+    text-align: left;
+    transition: var(--transition);
+  }
+
+  .nav-btn i { font-size: 15px; width: 24px; }
+  .nav-btn:hover { background: rgba(255,255,255,0.03); color: var(--text); }
+  .nav-btn.active { background: var(--accent-glow); color: var(--accent); font-weight: 600; }
+
+  /* Premium Glass Cards */
+  .card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    backdrop-filter: blur(12px) saturate(180%);
+    border-radius: var(--radius);
+    padding: 20px;
+    box-shadow: var(--shadow);
+    transition: var(--transition);
+  }
+  .card:hover { border-color: rgba(255,255,255,0.08); }
+
+  /* Stats Board */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+  }
+
+  .stat-card {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    position: relative;
+    overflow: hidden;
+  }
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; width: 4px; height: 100%;
+    background: var(--stat-color, var(--accent));
+  }
+
+  .stat-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .stat-val {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .stat-sub {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-family: 'DM Mono', monospace;
+  }
+
+  /* Revenue Badge special styling */
+  .rev-card {
+    background: linear-gradient(135deg, rgba(2, 132, 199, 0.08) 0%, rgba(255, 255, 255, 0.85) 100%);
+    border-color: rgba(2, 132, 199, 0.2);
+  }
+
+  /* Session Activity Logger Drawer */
+  .ledger-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 240px;
+  }
+
+  .ledger-container {
+    overflow-y: auto;
+    height: 160px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-right: 4px;
+  }
+
+  .ledger-row {
+    background: rgba(0, 0, 0, 0.02);
+    border-left: 2px solid var(--accent);
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-size: 11.5px;
+    font-family: 'DM Mono', monospace;
+    color: var(--text-muted);
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    line-height: 1.4;
+  }
+  .ledger-row.err { border-left-color: var(--red); }
+  .ledger-row.info { border-left-color: var(--blue); }
+  .ledger-row .time { color: var(--accent); flex-shrink: 0; }
+
+  /* Control Panel */
+  .control-row {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  @media (min-width: 768px) {
+    .control-row {
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+    }
+  }
+
+  .search-wrap {
+    position: relative;
+    flex: 1;
+    max-width: 500px;
+  }
+  .search-wrap i {
+    position: absolute;
+    left: 14px; top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+  }
+  .search-bar {
+    width: 100%;
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px 10px 40px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    outline: none;
+    transition: var(--transition);
+  }
+  .search-bar:focus { border-color: var(--accent); box-shadow: 0 0 10px var(--accent-glow); }
+
+  /* Advanced Filter Selectors */
+  .filter-bar {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .select-pill {
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    padding: 8px 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    outline: none;
+    cursor: pointer;
+    transition: var(--transition);
+  }
+  .select-pill:hover, .select-pill:focus { border-color: var(--accent); }
+  .select-pill option { background: var(--bg); color: var(--text); }
+
+  /* Dynamic Custom Filter tabs */
+  .filter-tabs {
+    display: flex;
+    gap: 4px;
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 4px;
+    overflow-x: auto;
+  }
+
+  .tab {
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: none;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12.5px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+    background: transparent;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active { background: var(--border); color: var(--text); font-weight: 600; }
+
+  /* Register Action Buttons */
+  .btn-group {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 16px;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    white-space: nowrap;
+  }
+  .btn i { font-size: 14px; }
+  
+  .btn-primary { background: var(--accent); color: var(--text-dark); }
+  .btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25); }
+  
+  .btn-secondary { background: #ffffff; border-color: var(--border); color: var(--text); }
+  .btn-secondary:hover { background: rgba(0, 0, 0, 0.04); border-color: var(--text-muted); }
+
+  .btn-danger { background: var(--red-dim); border-color: var(--red); color: var(--red); }
+  .btn-danger:hover { background: var(--red); color: #fff; transform: translateY(-1px); }
+
+  .btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none; box-shadow: none; }
+
+  /* Gorgeous Indian Plate Badge Styling (HSRP Look) */
+  .plate-container {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid #94a3b8;
+    border-radius: 4px;
+    overflow: hidden;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    color: #0f172a;
+    height: 24px;
+    user-select: all;
+  }
+  .plate-ind {
+    background: #1e3a8a;
+    color: #60a5fa;
+    font-size: 7px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+    height: 100%;
+    border-right: 1px solid #94a3b8;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.2px;
+  }
+  .plate-ind .chakra {
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    border: 0.8px solid #f59e0b;
+    margin-bottom: 1px;
+  }
+  .plate-num {
+    background: #f8fafc;
+    padding: 0 8px;
+    text-transform: uppercase;
+    white-space: nowrap;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    height: 100%;
+  }
+
+  /* Table Wrap */
+  .table-card {
+    padding: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .table-wrap {
+    overflow-x: auto;
+    width: 100%;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+    min-width: 1100px;
+    text-align: left;
+  }
+
+  th {
+    background: rgba(241, 245, 249, 0.9);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 16px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+
+  tr {
+    border-bottom: 1px solid var(--border);
+    transition: var(--transition);
+  }
+  tr:hover { background: rgba(16, 185, 129, 0.02); }
+  tr.selected { background: rgba(59, 130, 246, 0.04); }
+
+  td {
+    padding: 12px 16px;
+    vertical-align: middle;
+  }
+
+  /* Stacked cell text representation */
+  .stack-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .stack-primary { font-weight: 600; color: var(--text); }
+  .stack-secondary { font-size: 11.5px; color: var(--text-muted); font-family: 'DM Mono', monospace; }
+
+  /* Expiry Badge colors */
+  .expiry-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 11.5px;
+    font-weight: 700;
+    white-space: nowrap;
+    font-family: 'DM Mono', monospace;
+    border: 1px solid transparent;
+  }
+  .expiry-badge.expired { background: #000000; border-color: #000000; color: #ffffff; animation: blink 2s infinite; }
+  .expiry-badge.today { background: #222222; border-color: #222222; color: #ffffff; }
+  .expiry-badge.days1 { background: #444444; border-color: #444444; color: #ffffff; }
+  .expiry-badge.days3 { background: #777777; border-color: #777777; color: #ffffff; }
+  .expiry-badge.days7 { background: #dddddd; border-color: #cccccc; color: #000000; }
+  .expiry-badge.future { background: #f4f4f4; border-color: #e5e5e5; color: #000000; }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+  }
+
+  /* Insurance Provider Tags */
+  .ins-badge {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    display: inline-block;
+    background: #f5f5f5;
+    border: 1px solid #dcdcdc;
+    color: var(--text-muted);
+  }
+  .ins-badge.tata { background: #000000; border-color: #000000; color: #ffffff; }
+  .ins-badge.sbi { background: #333333; border-color: #333333; color: #ffffff; }
+  .ins-badge.bajaj { background: #666666; border-color: #666666; color: #ffffff; }
+  .ins-badge.digit { background: #999999; border-color: #999999; color: #000000; }
+  .ins-badge.newindia { background: #cccccc; border-color: #cccccc; color: #000000; }
+
+  /* Remarks/Notes Cell expansion */
+  .remarks-cell {
+    max-width: 200px;
+    font-size: 12.5px;
+    color: var(--text-muted);
+    cursor: pointer;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    transition: var(--transition);
+  }
+  .remarks-cell:hover { color: var(--text); text-decoration: underline; }
+  .remarks-cell.expanded {
+    white-space: normal;
+    word-break: break-word;
+  }
+
+  /* Data Integrity Indicator */
+  .integrity-alert {
+    color: var(--amber);
+    font-size: 11px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 2px;
+  }
+
+  /* WhatsApp Send Button */
+  .btn-wa-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: var(--accent);
+    color: var(--text-dark);
+    border: none;
+    border-radius: 6px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12.5px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: var(--transition);
+    text-decoration: none;
+  }
+  .btn-wa-action:hover { background: var(--accent-hover); transform: translateY(-1px); }
+  .btn-wa-action.sent {
+    background: rgba(16, 185, 129, 0.08);
+    border: 1px solid rgba(16, 185, 129, 0.4);
+    color: var(--accent);
+    cursor: pointer;
+    transform: none;
+  }
+  .btn-wa-action.sent:hover {
+    background: var(--accent);
+    color: var(--text-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.3);
+  }
+
+  /* Table checkbox styling */
+  .checkbox-cell {
+    width: 20px;
+  }
+  .custom-cb {
+    width: 16px; height: 16px;
+    border-radius: 4px;
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+
+  /* Document Management Buttons */
+  .btn-doc {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: var(--transition);
+    border: 1px solid var(--border);
+    background: rgba(255,255,255,0.02);
+    position: relative;
+  }
+  .btn-doc.active-pdf {
+    color: var(--accent);
+    border-color: rgba(16, 185, 129, 0.3);
+    background: rgba(16, 185, 129, 0.08);
+  }
+  .btn-doc.active-pdf:hover {
+    background: var(--accent);
+    color: var(--text-dark);
+    border-color: var(--accent);
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+    transform: translateY(-1px);
+  }
+  .btn-doc.active-kyc {
+    color: var(--purple);
+    border-color: rgba(188, 140, 255, 0.3);
+    background: rgba(188, 140, 255, 0.08);
+  }
+  .btn-doc.active-kyc:hover {
+    background: var(--purple);
+    color: var(--text-dark);
+    border-color: var(--purple);
+    box-shadow: 0 0 8px rgba(188, 140, 255, 0.4);
+    transform: translateY(-1px);
+  }
+  .btn-doc.local-missing {
+    color: var(--orange);
+    border-color: rgba(249, 115, 22, 0.3);
+    background: rgba(249, 115, 22, 0.08);
+  }
+  .btn-doc.local-missing:hover {
+    background: var(--orange);
+    color: var(--text-dark);
+    border-color: var(--orange);
+    box-shadow: 0 0 8px rgba(249, 115, 22, 0.4);
+    transform: translateY(-1px);
+  }
+  .btn-doc.empty-doc {
+    color: var(--text-muted);
+    opacity: 0.35;
+    border-color: var(--border);
+  }
+  .btn-doc.empty-doc:hover {
+    opacity: 0.8;
+    color: var(--text);
+    background: rgba(255,255,255,0.05);
+    border-color: var(--text-muted);
+  }
+
+  /* Empty state */
+  .empty {
+    text-align: center;
+    padding: 80px 20px;
+    color: var(--text-muted);
+  }
+  .empty i { font-size: 40px; margin-bottom: 12px; color: var(--border); }
+
+  /* Modals Overlay styling */
+  .modal-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    background: rgba(15, 23, 42, 0.3);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.25s ease;
+  }
+  .modal-overlay.active { opacity: 1; pointer-events: all; }
+
+  .modal {
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    width: 90%;
+    max-width: 550px;
+    box-shadow: var(--shadow);
+    transform: translateY(20px);
+    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    display: flex;
+    flex-direction: column;
+    max-height: 90vh;
+    overflow-x: hidden;
+  }
+  .modal-overlay.active .modal { transform: translateY(0); }
+
+  .modal-header {
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .modal-header h2 { font-size: 16.5px; font-weight: 700; }
+  .modal-close {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 18px;
+    cursor: pointer;
+    transition: var(--transition);
+  }
+  .modal-close:hover { color: var(--text); }
+
+  .modal-body {
+    padding: 24px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .modal-footer {
+    padding: 16px 24px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+  }
+
+  /* Form Fields */
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  @media (min-width: 480px) {
+    .form-row { grid-template-columns: 1fr 1fr; }
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .form-group label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+  }
+  .form-input {
+    width: 100%;
+    box-sizing: border-box;
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 9px 12px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13.5px;
+    outline: none;
+    transition: var(--transition);
+  }
+
+  .form-input:focus { border-color: var(--accent); }
+  .form-input[type="date"] { font-family: 'DM Mono', monospace; }
+
+  /* Premium Flatpickr Calendar Styling */
+  .flatpickr-calendar {
+    background: var(--card-bg) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border: 1px solid var(--card-border) !important;
+    box-shadow: var(--shadow) !important;
+    border-radius: var(--radius) !important;
+    font-family: 'DM Sans', sans-serif !important;
+    color: var(--text) !important;
+  }
+  .flatpickr-months .flatpickr-month,
+  .flatpickr-months .flatpickr-prev-month,
+  .flatpickr-months .flatpickr-next-month {
+    color: var(--text) !important;
+    fill: var(--text) !important;
+  }
+  .flatpickr-current-month .numInputWrapper span.arrowUp:after {
+    border-bottom-color: var(--text) !important;
+  }
+  .flatpickr-current-month .numInputWrapper span.arrowDown:after {
+    border-top-color: var(--text) !important;
+  }
+  .flatpickr-day {
+    color: var(--text) !important;
+    border-radius: 6px !important;
+    transition: var(--transition) !important;
+  }
+  .flatpickr-day.today {
+    border-color: var(--accent) !important;
+    color: var(--accent) !important;
+  }
+  .flatpickr-day.selected, 
+  .flatpickr-day.selected:focus, 
+  .flatpickr-day.selected:hover,
+  .flatpickr-day.prevMonthDay.selected,
+  .flatpickr-day.nextMonthDay.selected {
+    background: var(--accent) !important;
+    border-color: var(--accent) !important;
+    color: #ffffff !important;
+  }
+  .flatpickr-day:hover,
+  .flatpickr-day.prevMonthDay:hover,
+  .flatpickr-day.nextMonthDay:hover,
+  .flatpickr-day.focus,
+  .flatpickr-day.prevMonthDay.focus,
+  .flatpickr-day.nextMonthDay.focus {
+    background: var(--accent-glow) !important;
+    border-color: transparent !important;
+    color: var(--accent) !important;
+  }
+  .flatpickr-day.flatpickr-disabled,
+  .flatpickr-day.flatpickr-disabled:hover {
+    color: var(--text-muted) !important;
+    opacity: 0.3 !important;
+    background: transparent !important;
+  }
+  .flatpickr-weekday {
+    color: var(--text-muted) !important;
+    font-weight: 600 !important;
+  }
+  .flatpickr-current-month {
+    font-size: 105% !important;
+  }
+
+  /* Drag & Drop Import Zone */
+  .drop-zone {
+    border: 2px dashed var(--border);
+    border-radius: var(--radius);
+    padding: 36px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+  .drop-zone:hover, .drop-zone.dragover { border-color: var(--accent); background: rgba(2, 132, 199, 0.04); }
+  .drop-zone i { font-size: 32px; color: var(--text-muted); }
+  .drop-zone span { font-size: 13.5px; font-weight: 500; }
+  .drop-zone p { font-size: 11px; color: var(--text-muted); }
+
+  /* Toast Notification */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: #ffffff;
+    border: 1px solid var(--accent);
+    color: var(--text);
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    z-index: 1200;
+    transform: translateY(80px);
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(.34,1.56,.64,1);
+    box-shadow: var(--shadow);
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.err { border-color: var(--red); }
+
+  /* WhatsApp Template Live Preview Block */
+  .template-preview {
+    background: #e2e8f0;
+    border-radius: 8px;
+    padding: 14px;
+    color: #1e293b;
+    font-family: sans-serif;
+    font-size: 13px;
+    white-space: pre-wrap;
+    line-height: 1.5;
+    border-left: 3px solid #00a884;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+  /* Security Lock & Setup Screen */
+  .security-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    background: radial-gradient(circle at 0% 0%, #f0f4f8 0%, #f4f7fa 50%), 
+                radial-gradient(circle at 100% 100%, #e0ebf6 0%, #f4f7fa 50%);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(20px);
+    transition: opacity 0.3s ease;
+  }
+  
+  .security-card {
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 32px;
+    width: 90%;
+    max-width: 440px;
+    box-shadow: 0 20px 50px rgba(148, 163, 184, 0.18);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    text-align: center;
+  }
+  
+  .security-card h2 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  
+  .security-card p {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+  
+  .otp-inputs-wrap {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin: 10px 0;
+  }
+  
+  .otp-input-cell {
+    width: 44px;
+    height: 48px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    text-align: center;
+    font-size: 20px;
+    font-weight: 700;
+    font-family: 'DM Mono', monospace;
+    outline: none;
+    color: var(--accent);
+    background: #f8fafc;
+    transition: var(--transition);
+  }
+  
+  .otp-input-cell:focus {
+    border-color: var(--accent);
+    background: #ffffff;
+    box-shadow: 0 0 8px var(--accent-glow);
+  }
+  
+  .otp-method-btn {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 18px;
+    background: #f8fafc;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 13.5px;
+    transition: var(--transition);
+    text-align: left;
+    width: 100%;
+    color: var(--text);
+  }
+  
+  .otp-method-btn:hover {
+    border-color: var(--accent);
+    background: rgba(2, 132, 199, 0.02);
+  }
+  
+  .otp-method-btn i {
+    font-size: 18px;
+    color: var(--accent);
+  }
+
+  /* ==============================================
+     MOBILE & TABLET PREMIUM RESPONSIVE OVERRIDES
+     ============================================== */
+  .mobile-header {
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 18px;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 150;
+  }
+  
+  #sidebarToggleBtn, #mobileActionsBtn {
+    background: none;
+    border: none;
+    font-size: 20px;
+    color: var(--text);
+    cursor: pointer;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    transition: background 0.2s, transform 0.15s;
+  }
+  
+  #sidebarToggleBtn:active, #mobileActionsBtn:active {
+    transform: scale(0.92);
+  }
+  
+  #sidebarToggleBtn:hover, #mobileActionsBtn:hover {
+    background: rgba(0,0,0,0.05);
+  }
+
+  .mobile-brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+    font-size: 13.5px;
+    text-transform: uppercase;
+    letter-spacing: -0.2px;
+    color: var(--text);
+  }
+
+  .sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(15, 23, 42, 0.3);
+    backdrop-filter: blur(4px);
+    z-index: 990;
+    display: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  
+  .sidebar-overlay.active {
+    display: block;
+    opacity: 1;
+  }
+
+  .mobile-actions-dropdown {
+    display: none;
+    position: absolute;
+    top: 42px;
+    right: 0;
+    width: 220px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.05);
+    z-index: 200;
+    padding: 6px;
+    flex-direction: column;
+    gap: 2px;
+    transform-origin: top right;
+    animation: dropdownScale 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  
+  .mobile-actions-dropdown.active {
+    display: flex;
+  }
+  
+  @keyframes dropdownScale {
+    from { opacity: 0; transform: scale(0.95) translateY(-5px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+  }
+
+  .dropdown-item {
+    background: none;
+    border: none;
+    text-align: left;
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    cursor: pointer;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: background 0.15s, color 0.15s;
+  }
+  
+  .dropdown-item:hover {
+    background: rgba(16, 185, 129, 0.05);
+    color: var(--accent);
+  }
+
+  @media (max-width: 1024px) {
+    .app-container {
+      grid-template-columns: 1fr !important;
+    }
+    
+    .mobile-header {
+      display: flex;
+    }
+    
+    aside {
+      position: fixed !important;
+      top: 0;
+      left: -300px;
+      width: 280px;
+      height: 100vh !important;
+      z-index: 1000 !important;
+      background: white !important;
+      transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1) !important;
+      border-right: 1px solid var(--border) !important;
+      border-bottom: none !important;
+    }
+    
+    aside.active {
+      left: 0 !important;
+    }
+  }
+
+  /* View Switcher Tabs Styling */
+  .view-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 4px;
+    width: 100%;
+  }
+  .view-tab-btn {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 11px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--card-bg);
+    color: var(--text-muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  }
+  .view-tab-btn:hover {
+    background: rgba(255, 255, 255, 0.95);
+    color: var(--text);
+    transform: translateY(-1px);
+  }
+  .view-tab-btn.active-view {
+    background: var(--accent-glow) !important;
+    border-color: var(--accent) !important;
+    color: var(--accent) !important;
+    box-shadow: 0 4px 12px rgba(2, 132, 199, 0.15) !important;
+  }
+  .view-tab-btn i {
+    font-size: 15px;
+  }
+
+  /* Analytics Grid & Card Styling */
+  .analytics-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+    width: 100%;
+    margin-top: 10px;
+  }
+  @media (min-width: 992px) {
+    .analytics-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+    .analytics-grid-full {
+      grid-column: span 2;
+    }
+  }
+  .chart-card {
+    min-height: 380px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    backdrop-filter: blur(12px) saturate(180%);
+    border-radius: var(--radius);
+    padding: 20px;
+    box-shadow: var(--shadow);
+    transition: var(--transition);
+  }
+  .chart-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 30px rgba(148, 163, 184, 0.16);
+  }
+  .chart-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 12px;
+  }
+  .chart-header h3 {
+    font-size: 14.5px;
+    font-weight: 700;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .chart-header h3 i {
+    font-size: 16px;
+  }
+  .chart-body {
+    flex: 1;
+    position: relative;
+    width: 100%;
+    height: 100%;
+    min-height: 280px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .chart-body canvas {
+    max-width: 100%;
+    max-height: 100%;
+  }
+</style>
+</head>
+<body>
+
+<!-- Mobile Header for small viewports -->
+<div class="mobile-header">
+  <button id="sidebarToggleBtn" onclick="toggleSidebarDrawer()">
+    <i class="fa-solid fa-bars"></i>
+  </button>
+  <div class="mobile-brand">
+    <img src="logo.png" alt="Logo" style="height: 28px; width: auto; object-fit: contain;">
+    <span>Panghat Gift Shop</span>
+  </div>
+  <button id="mobileActionsBtn" onclick="openAddModal()" style="color: var(--accent); font-size: 22px;">
+    <i class="fa-solid fa-plus"></i>
+  </button>
+</div>
+
+<!-- Backdrop Overlay for Mobile Drawer -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebarDrawer()"></div>
+
+<div class="app-container">
+  
+  <!-- SIDEBAR PANELS -->
+  <aside id="appSidebar">
+    <!-- Close button for mobile drawer -->
+    <button class="sidebar-close-btn" onclick="toggleSidebarDrawer()" style="display: none; position: absolute; top: 18px; right: 18px; background: none; border: none; font-size: 20px; color: var(--text-muted); cursor: pointer; align-items: center; justify-content: center;">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+    <!-- Branding Header -->
+    <div class="brand" style="flex-direction: column; align-items: flex-start; gap: 14px; border-bottom: 1px solid var(--border); padding-bottom: 18px; margin-bottom: -10px;">
+      <div class="brand-logo" style="width: 100%; max-height: 85px; display: flex; align-items: center; overflow: hidden;">
+        <img src="logo.png" alt="Panghat Gift Shop Logo" style="max-width: 100%; max-height: 75px; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(148, 163, 184, 0.08));">
+      </div>
+      <div class="brand-text">
+        <h1 style="font-size: 14.5px; font-weight: 700; color: var(--text); letter-spacing: -0.2px; text-transform: uppercase;">Panghat Gift Shop</h1>
+        <p id="todayDateLabel" style="margin-top: 2px;">Loading date...</p>
+      </div>
+    </div>
+
+    <!-- Active Target Year Simulator -->
+    <div class="nav-group">
+      <span class="nav-title">Target Register Year</span>
+      <select class="select-pill" id="targetYearFilter" onchange="applyFiltersAndStats()" style="width: 100%;">
+        <option value="all">All Years</option>
+        <option value="2025">2025 Fiscal</option>
+        <option value="2026" selected>2026 Fiscal</option>
+        <option value="2027">2027 Fiscal</option>
+        <option value="2028">2028 Fiscal (Leap)</option>
+      </select>
+    </div>
+
+    <!-- Register Tools Drawer -->
+    <div class="nav-group">
+      <span class="nav-title">Register Tools</span>
+      <button class="nav-btn" onclick="openAddModal()"><span class="stack-cell"><span style="color:var(--text);font-weight:600;"><i class="fa-solid fa-plus" style="color:var(--accent);"></i> New Daily Entry</span></span></button>
+      <button class="nav-btn" onclick="exportExcel()"><span class="stack-cell"><span style="color:var(--text);font-weight:600;"><i class="fa-solid fa-file-excel" style="color:var(--accent);"></i> Export Excel Sheet</span></span></button>
+      <button class="nav-btn" onclick="openTemplateModal()"><span class="stack-cell"><span style="color:var(--text);font-weight:600;"><i class="fa-brands fa-whatsapp" style="color:var(--accent);"></i> Edit Message Template</span></span></button>
+      <button class="nav-btn" onclick="openSecuritySettingsModal()"><span class="stack-cell"><span style="color:var(--text);font-weight:600;"><i class="fa-solid fa-cloud" style="color:var(--amber);"></i> Firebase Cloud Sync Settings</span></span></button>
+      <button class="nav-btn" onclick="downloadJSONBackup()"><span class="stack-cell"><span style="color:var(--text);font-weight:600;"><i class="fa-solid fa-file-arrow-down" style="color:var(--purple);"></i> Download Ledger Backup</span></span></button>
+      <button class="nav-btn" onclick="triggerJSONBackupSelect()"><span class="stack-cell"><span style="color:var(--text);font-weight:600;"><i class="fa-solid fa-file-arrow-up" style="color:var(--blue);"></i> Restore Ledger Backup</span></span></button>
+      <button class="nav-btn" onclick="wipeEntireRegister()"><span class="stack-cell"><span style="color:var(--red);font-weight:600;"><i class="fa-solid fa-trash-can" style="color:var(--red);"></i> Wipe Entire Register</span></span></button>
+    </div>
+
+    <!-- Session Audit Activity Log -->
+    <div class="nav-group ledger-panel">
+      <span class="nav-title">Session Activity Log</span>
+      <div class="ledger-container" id="activityLedger">
+        <!-- Live Action rows insert here -->
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN WORKSPACE -->
+  <main>
+    
+    <!-- STATS DASHBOARD -->
+    <div class="stats-grid">
+      <div class="card stat-card rev-card" style="--stat-color: var(--accent);">
+        <span class="stat-label">Total Premium Value</span>
+        <span class="stat-val" id="premiumValue">₹0</span>
+        <span class="stat-sub" id="premiumCount">0 active policies</span>
+      </div>
+      <div class="card stat-card" style="--stat-color: var(--red);">
+        <span class="stat-label">Expired Policies</span>
+        <span class="stat-val" id="expiredCount">0</span>
+        <span class="stat-sub">Action required</span>
+      </div>
+      <div class="card stat-card" style="--stat-color: var(--orange);">
+        <span class="stat-label">Urgent (≤3 Days)</span>
+        <span class="stat-val" id="urgentCount">0</span>
+        <span class="stat-sub">Needs WhatsApp</span>
+      </div>
+      <div class="card stat-card" style="--stat-color: var(--blue);">
+        <span class="stat-label">Incoming (≤7 Days)</span>
+        <span class="stat-val" id="incomingCount">0</span>
+        <span class="stat-sub">Queued reminders</span>
+      </div>
+    </div>
+
+    <!-- VIEW SWITCHER TABS -->
+    <div class="view-tabs">
+      <button class="view-tab-btn active-view" id="btnTableView" onclick="switchView('table')">
+        <i class="fa-solid fa-table-list"></i> Table Register
+      </button>
+      <button class="view-tab-btn" id="btnAnalyticsView" onclick="switchView('analytics')">
+        <i class="fa-solid fa-chart-pie"></i> Interactive Analytics
+      </button>
+    </div>
+
+    <!-- REGISTER TABLE VIEW CONTAINER -->
+    <div id="registerTableView">
+
+    <!-- REGISTER CONTROLS BOARD -->
+    <div class="card control-row">
+      <div class="search-wrap">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" class="search-bar" id="searchBox" placeholder="Search by name, vehicle model, plate number, provider..." oninput="applyFiltersAndStats()">
+      </div>
+      <div class="filter-bar">
+        <!-- Month Filter Selector -->
+        <select class="select-pill" id="monthFilter" onchange="applyFiltersAndStats()">
+          <option value="all">All Months (Jan-Dec)</option>
+          <option value="0">January</option>
+          <option value="1">February</option>
+          <option value="2">March</option>
+          <option value="3">April</option>
+          <option value="4">May</option>
+          <option value="5">June</option>
+          <option value="6">July</option>
+          <option value="7">August</option>
+          <option value="8">September</option>
+          <option value="9">October</option>
+          <option value="10">November</option>
+          <option value="11">December</option>
+        </select>
+        
+        <!-- Interactive Date Simulator Tool -->
+        <div style="display: flex; align-items: center; gap: 6px; background: rgba(255, 255, 255, 0.95); border: 1px solid var(--border); padding: 5px 10px; border-radius: 8px;">
+          <span style="font-size: 11.5px; color: var(--text-muted); font-weight: 600;">Simulate Date:</span>
+          <input type="date" id="dateSimulator" onchange="updateSimulatedDate()" style="background:transparent; border:none; color:var(--text); font-family:'DM Mono',monospace; font-size:12px; outline:none; cursor:pointer;">
+          <button onclick="resetSimulatedDate()" style="background:transparent; border:none; color:var(--accent); font-size:11px; font-weight:700; cursor:pointer;"><i class="fa-solid fa-rotate-left"></i> Today</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- FILTER TABS & BULK ACTIONS -->
+    <div style="display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap;">
+      <div class="filter-tabs">
+        <button class="tab active" onclick="setStatusFilter('all', this)">All Registers</button>
+        <button class="tab" onclick="setStatusFilter('expired', this)">Expired Only</button>
+        <button class="tab" onclick="setStatusFilter('today', this)">Due Today</button>
+        <button class="tab" onclick="setStatusFilter('3', this)">≤3 Days</button>
+        <button class="tab" onclick="setStatusFilter('7', this)">≤7 Days</button>
+        <button class="tab" onclick="setStatusFilter('unsent', this)">Unsent WhatsApp</button>
+      </div>
+
+      <div class="btn-group">
+        <button class="btn btn-secondary" id="btnDeleteSelected" onclick="deleteSelected()" disabled><i class="fa-solid fa-trash-can"></i> Delete Selected</button>
+        <button class="btn btn-primary" id="btnSendBulk" onclick="triggerBulkSend()" disabled><i class="fa-brands fa-whatsapp"></i> Send Reminders (<span id="selectedCount">0</span>)</button>
+      </div>
+    </div>
+
+    <!-- INSURANCE DATA TABLE LEDGER -->
+    <div class="card table-card">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th width="40" style="padding-left:16px;"><input type="checkbox" class="custom-cb" id="selectAllCheckbox" onchange="toggleSelectAll(this)"></th>
+              <th width="40">#</th>
+              <th>Client Information</th>
+              <th>Vehicle Details</th>
+              <th>Insurance & Policy Details</th>
+              <th>Term Dates</th>
+              <th>Time Left</th>
+              <th>Premium</th>
+              <th>Remarks / Notes</th>
+              <th width="90">Documents</th>
+              <th width="120">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="registerTableBody">
+            <!-- Row data injected here dynamically -->
+          </tbody>
+        </table>
+      </div>
+      
+      <!-- EMPTY STATE -->
+      <div class="empty" id="emptyRegisterState" style="display: none;">
+        <i class="fa-regular fa-folder-open"></i>
+        <h3>No ledger records found</h3>
+        <p>Try refining your search keyword, changing month filters, or clicking "New Daily Entry" to create a policy!</p>
+      </div>
+    </div> <!-- End table-card -->
+    </div> <!-- End registerTableView -->
+
+    <!-- DYNAMIC INTERACTIVE VISUAL ANALYTICS BOARD -->
+    <div id="analyticsView" style="display: none;">
+      <div class="analytics-grid">
+        <!-- 1. Insurance Provider Doughnut Share Chart -->
+        <div class="chart-card">
+          <div class="chart-header">
+            <h3><i class="fa-solid fa-chart-pie" style="color:var(--accent);"></i> Insurance Provider Share</h3>
+            <span style="font-size: 11px; color: var(--text-muted); font-family: 'DM Mono', monospace;" id="chartProviderTotal">Active Policies</span>
+          </div>
+          <div class="chart-body">
+            <canvas id="chartProviderShare"></canvas>
+          </div>
+        </div>
+
+        <!-- 2. Policy Expiry Urgency Polar Area Chart -->
+        <div class="chart-card">
+          <div class="chart-header">
+            <h3><i class="fa-solid fa-triangle-exclamation" style="color:var(--orange);"></i> Policy Expiry Urgency</h3>
+            <span style="font-size: 11px; color: var(--text-muted); font-family: 'DM Mono', monospace;" id="chartUrgencyTotal">Risk Analysis</span>
+          </div>
+          <div class="chart-body">
+            <canvas id="chartUrgencyDist"></canvas>
+          </div>
+        </div>
+
+        <!-- 3. Monthly Expiry timeline Forecast Bar Chart -->
+        <div class="chart-card analytics-grid-full">
+          <div class="chart-header">
+            <h3><i class="fa-solid fa-chart-column" style="color:var(--purple);"></i> Monthly Renewal Timeline (Forecast)</h3>
+            <span style="font-size: 11.5px; color: var(--text-muted); font-weight: 600;" id="chartTimelineTotal">Premium Forecast</span>
+          </div>
+          <div class="chart-body">
+            <canvas id="chartRenewalTimeline"></canvas>
+          </div>
+        </div>
+      </div>
+    </div> <!-- End analyticsView -->
+
+  </main>
+</div>
+
+<!-- ============================================== -->
+<!-- MODALS SUITE -->
+<!-- ============================================== -->
+
+<!-- 1. ADD NEW POLICY ENTRY MODAL -->
+<div class="modal-overlay" id="addModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2><i class="fa-solid fa-plus" style="color:var(--accent);"></i> New Daily Entry</h2>
+      <button class="modal-close" onclick="closeModal('addModal')"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Client Full Name *</label>
+        <input type="text" class="form-input" id="addName" placeholder="e.g. BHARATBHAI NAGARBHAI PATEL" required>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Vehicle Name/Model *</label>
+          <input type="text" class="form-input" id="addVehicle" placeholder="e.g. SPLENDER" required>
+        </div>
+        <div class="form-group">
+          <label>Number Plate / Reg. No *</label>
+          <input type="text" class="form-input" id="addPlate" placeholder="e.g. GJ13SS2914" required autocapitalize="characters">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Insurance Provider *</label>
+          <input type="text" class="form-input" id="addInsurance" placeholder="e.g. TATA" required>
+        </div>
+        <div class="form-group">
+          <label>Policy Number</label>
+          <input type="text" class="form-input" id="addPolicyNo" placeholder="e.g. POPMCAR001012748">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Start Date</label>
+          <input type="date" class="form-input" id="addStartDate">
+        </div>
+        <div class="form-group">
+          <label>Expiry Date (End Date) *</label>
+          <input type="date" class="form-input" id="addEndDate" required>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Premium Amount Paid (₹)</label>
+          <input type="number" class="form-input" id="addAmount" placeholder="e.g. 1267">
+        </div>
+        <div class="form-group">
+          <label>Contact Phone Number *</label>
+          <input type="text" class="form-input" id="addPhone" placeholder="e.g. 9426985344" required>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Notes / Remarks (Act like a Register Book Note)</label>
+        <textarea class="form-input" id="addNotes" rows="3" placeholder="e.g. Called client today, pending payment next Monday..."></textarea>
+      </div>
+      <div class="form-row" style="border-top:1px solid var(--border);padding-top:14px;margin-top:10px;">
+        <div class="form-group">
+          <label><i class="fa-solid fa-file-pdf" style="color:var(--accent);"></i> Attach Policy PDF Document</label>
+          <input type="file" class="form-input" id="addPolicyDoc" accept=".pdf,image/*" onchange="previewUploadFile(this, 'addPolicyPreview')">
+          <span class="stack-secondary" id="addPolicyPreview" style="font-size:11.5px;color:var(--accent);">No file attached</span>
+        </div>
+        <div class="form-group">
+          <label><i class="fa-solid fa-id-card" style="color:var(--purple);"></i> Attach Client KYC Document(s) (PDF/Images) *Multiple</label>
+          <input type="file" class="form-input" id="addKycDoc" accept=".pdf,image/*" multiple onchange="previewUploadFilesMultiple(this, 'addKycPreview')">
+          <span class="stack-secondary" id="addKycPreview" style="font-size:11.5px;color:var(--accent);line-height:1.4;">No files attached</span>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('addModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="submitAddEntry()">Save Policy</button>
+    </div>
+  </div>
+</div>
+
+<!-- 2. EDIT POLICY ENTRY MODAL -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2><i class="fa-solid fa-pen-to-square" style="color:var(--accent);"></i> Edit Register Record</h2>
+      <button class="modal-close" onclick="closeModal('editModal')"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editIndex">
+      <div class="form-group">
+        <label>Client Full Name *</label>
+        <input type="text" class="form-input" id="editName" required>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Vehicle Name/Model *</label>
+          <input type="text" class="form-input" id="editVehicle" required>
+        </div>
+        <div class="form-group">
+          <label>Number Plate / Reg. No *</label>
+          <input type="text" class="form-input" id="editPlate" required autocapitalize="characters">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Insurance Provider *</label>
+          <input type="text" class="form-input" id="editInsurance" required>
+        </div>
+        <div class="form-group">
+          <label>Policy Number</label>
+          <input type="text" class="form-input" id="editPolicyNo">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Start Date</label>
+          <input type="date" class="form-input" id="editStartDate">
+        </div>
+        <div class="form-group">
+          <label>Expiry Date (End Date) *</label>
+          <input type="date" class="form-input" id="editEndDate" required>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Premium Amount Paid (₹)</label>
+          <input type="number" class="form-input" id="editAmount">
+        </div>
+        <div class="form-group">
+          <label>Contact Phone Number *</label>
+          <input type="text" class="form-input" id="editPhone" required>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Notes / Remarks</label>
+        <textarea class="form-input" id="editNotes" rows="3"></textarea>
+      </div>
+      <div class="form-row" style="border-top:1px solid var(--border);padding-top:14px;margin-top:10px;">
+        <div class="form-group">
+          <label><i class="fa-solid fa-file-pdf" style="color:var(--accent);"></i> Attach Policy PDF Document</label>
+          <input type="file" class="form-input" id="editPolicyDoc" accept=".pdf,image/*" onchange="previewUploadFile(this, 'editPolicyPreview')">
+          <span class="stack-secondary" id="editPolicyPreview" style="font-size:11.5px;color:var(--accent);">No file attached</span>
+        </div>
+        <div class="form-group">
+          <label><i class="fa-solid fa-id-card" style="color:var(--purple);"></i> Attach Client KYC Document(s) (PDF/Images) *Multiple</label>
+          <input type="file" class="form-input" id="editKycDoc" accept=".pdf,image/*" multiple onchange="previewUploadFilesMultiple(this, 'editKycPreview')">
+          <span class="stack-secondary" id="editKycPreview" style="font-size:11.5px;color:var(--accent);line-height:1.4;">No files attached</span>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('editModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="submitEditEntry()">Update Policy</button>
+    </div>
+  </div>
+</div>
+
+<!-- Drag & Drop Excel Import Modal Removed -->
+
+<!-- 4. EDIT MESSAGE TEMPLATE MODAL -->
+<div class="modal-overlay" id="templateModal">
+  <div class="modal" style="max-width: 600px;">
+    <div class="modal-header">
+      <h2><i class="fa-brands fa-whatsapp" style="color:var(--accent);"></i> Custom WhatsApp Message Template</h2>
+      <button class="modal-close" onclick="closeModal('templateModal')"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Message Content Template</label>
+        <textarea class="form-input" id="messageTemplateInput" rows="7" oninput="updateTemplatePreview()" style="font-size:12.5px;line-height:1.5;"></textarea>
+      </div>
+      <div style="font-size: 11px; color: var(--text-muted); line-height: 1.4; background: rgba(255,255,255,0.02); padding: 10px; border-radius: 6px; border: 1px solid var(--border);">
+        <strong>Supported Template Placeholders:</strong>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:4px; margin-top: 6px; font-family:'DM Mono',monospace;">
+          <div>{name} : Client Name</div>
+          <div>{vehicle} : Vehicle Model</div>
+          <div>{plate} : Plate Number</div>
+          <div>{insurance} : Insurance Company</div>
+          <div>{policy} : Policy Number</div>
+          <div>{expiry} : Expiry Date</div>
+          <div>{days} : Days Remaining</div>
+          <div>{remarks} : Policy Notes</div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>WhatsApp Live Template Preview</label>
+        <div class="template-preview" id="templatePreviewBlock">Loading preview...</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('templateModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveMessageTemplate()">Save Template</button>
+    </div>
+  </div>
+</div>
+
+<!-- SECURITY & API SETTINGS MODAL -->
+<div class="modal-overlay" id="securitySettingsModal">
+  <div class="modal" style="max-width: 580px;">
+    <div class="modal-header">
+      <h2><i class="fa-solid fa-cloud-arrow-up" style="color:var(--amber);"></i> Firebase Cloud Sync Settings</h2>
+      <button class="modal-close" onclick="closeModal('securitySettingsModal')"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <!-- Google Firebase Cloud Sync -->
+      <div style="padding-bottom:6px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+          <span style="font-size:12.5px; font-weight:700; color:var(--text);"><i class="fa-solid fa-circle-nodes" style="color:var(--accent);"></i> Real-time Cloud Synchronization</span>
+          <label style="display:flex; align-items:center; gap:6px; font-size:11px; cursor:pointer; font-weight: 600;">
+            <input type="checkbox" id="settingsFirebaseEnabled" style="cursor:pointer;" onchange="toggleFirebaseInputs(this.checked)">
+            Enable Cloud Sync
+          </label>
+        </div>
+        <p style="font-size:10.5px; color:var(--text-muted); margin-bottom:10px;">Sync policies, PDFs, and KYC documents in real time across multiple computers or mobile phones for free! If you leave these credentials blank while active, we will automatically set up a fast public demo database for you.</p>
+        
+        <div id="firebaseConfigFields" style="display:none;">
+          <div class="form-row">
+            <div class="form-group">
+              <label>API Key</label>
+              <input type="password" class="form-input" id="settingsFirebaseApiKey" placeholder="e.g. AIzaSy...">
+            </div>
+            <div class="form-group">
+              <label>Project ID</label>
+              <input type="text" class="form-input" id="settingsFirebaseProjectId" placeholder="e.g. panghatgiftshop">
+            </div>
+          </div>
+          <div class="form-row" style="margin-top:10px;">
+            <div class="form-group">
+              <label>Auth Domain</label>
+              <input type="text" class="form-input" id="settingsFirebaseAuthDomain" placeholder="e.g. panghatgiftshop.firebaseapp.com">
+            </div>
+            <div class="form-group">
+              <label>Storage Bucket</label>
+              <input type="text" class="form-input" id="settingsFirebaseStorageBucket" placeholder="e.g. panghatgiftshop.appspot.com">
+            </div>
+          </div>
+          <div class="form-row" style="margin-top:10px;">
+            <div class="form-group">
+              <label>Messaging Sender ID</label>
+              <input type="text" class="form-input" id="settingsFirebaseSenderId" placeholder="e.g. 123456789">
+            </div>
+            <div class="form-group">
+              <label>App ID</label>
+              <input type="text" class="form-input" id="settingsFirebaseAppId" placeholder="e.g. 1:123:web:abc">
+            </div>
+          </div>
+          <div style="margin-top:12px; display:flex; gap:10px;">
+            <button type="button" class="btn btn-secondary" onclick="testFirebaseCloudConnection()" style="font-size:11px; padding:6px 12px; height:auto; width:auto; border-color:var(--amber); color:var(--amber); background:rgba(217,119,6,0.05);"><i class="fa-solid fa-circle-nodes"></i> Test Connection</button>
+            <button type="button" class="btn btn-secondary" onclick="syncLocalToCloud()" id="btnSyncLocalToCloud" style="font-size:11px; padding:6px 12px; height:auto; width:auto; border-color:var(--purple); color:var(--purple); background:rgba(124,58,237,0.05);"><i class="fa-solid fa-cloud-arrow-up"></i> Upload Local Data</button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Google Drive File Upload -->
+      <div style="padding-top:14px; margin-top:14px; border-top:1px dashed var(--border);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+          <span style="font-size:12.5px; font-weight:700; color:var(--text);"><i class="fab fa-google-drive" style="color:var(--orange);"></i> Google Drive Storage</span>
+          <label style="display:flex; align-items:center; gap:6px; font-size:11px; cursor:pointer; font-weight: 600;">
+            <input type="checkbox" id="settingsGoogleDriveEnabled" style="cursor:pointer;" onchange="toggleGoogleDriveInputs(this.checked)">
+            Enable Google Drive
+          </label>
+        </div>
+        <p style="font-size:10.5px; color:var(--text-muted); margin-bottom:10px;">Store PDFs and images securely inside a Google Drive folder using a Google Apps Script Web App. If enabled, this replaces Firebase Storage for files.</p>
+        
+        <div id="googleDriveFields" style="display:none;">
+          <div class="form-row">
+            <div class="form-group" style="flex:2;">
+              <label>Google Apps Script Web App URL</label>
+              <input type="text" class="form-input" id="settingsGoogleDriveWebAppUrl" placeholder="https://script.google.com/macros/s/.../exec">
+            </div>
+          </div>
+          <div class="form-row" style="margin-top:10px;">
+            <div class="form-group">
+              <label>Google Drive Folder ID (Optional)</label>
+              <input type="text" class="form-input" id="settingsGoogleDriveFolderId" placeholder="e.g. 1aBcDeFgHiJkLmNoPqRsTuVwXyZ">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('securitySettingsModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveSecuritySettings()"><i class="fa-solid fa-floppy-disk"></i> Save Cloud Sync Settings</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST WRAPPER -->
+<div class="toast" id="toast">
+<span id="toastIcon"><i class="fa-solid fa-circle-check"></i></span>
+  <span id="toastMsg">Action completed successfully!</span>
+</div>
+
+<script>
+// Auto-Cache Buster Version Verification
+const CURRENT_VERSION = "1.2.0";
+
+(async function checkAndBustCache() {
+  if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" || window.location.protocol === "file:") {
+    return;
+  }
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.has('cb')) {
+    const cbTime = parseInt(urlParams.get('cb'), 10);
+    if (Date.now() - cbTime < 10000) {
+      return;
+    }
+  }
+  try {
+    const response = await fetch(window.location.pathname + "?no_cache=" + Date.now(), {
+      cache: "no-store",
+      headers: { "Cache-Control": "no-cache", "Pragma": "no-cache" }
+    });
+    if (response.ok) {
+      const htmlText = await response.text();
+      const match = htmlText.match(/const\s+CURRENT_VERSION\s*=\s*["']([^"']+)["']/);
+      if (match && match[1] && match[1] !== CURRENT_VERSION) {
+        console.log(`[CacheBuster] New version detected: ${match[1]} (running: ${CURRENT_VERSION}). Reloading...`);
+        window.location.replace(window.location.pathname + "?cb=" + Date.now());
+      }
+    }
+  } catch (err) {
+    console.warn("[CacheBuster] Version check failed:", err);
+  }
+})();
+
+// INITIAL DATA MERGE (Base template provided + pre-prepared fields)
+const DEFAULT_RAW_DATA = [];
+
+// App State Management
+let DATA = [];
+let filteredData = [];
+let SIMULATED_TODAY = new Date(); // Holds current simulated calendar date
+let activeStatusFilter = 'all';
+const uploadingDocIds = new Set();
+
+// Setup LocalStorage or load defaults
+// Setup IndexedDB Permanent Database
+const DB_NAME = 'InsuranceRegisterDB';
+const DB_VERSION = 1;
+const STORE_NAME = 'policies';
+let dbInstance;
+
+function generateUniqueId() {
+  return 'MMC_' + Date.now().toString(36) + '_' + Math.random().toString(36).substr(2, 9).toUpperCase();
+}
+
+function initDatabase() {
+  const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+  request.onupgradeneeded = function(e) {
+    const db = e.target.result;
+    if (!db.objectStoreNames.contains(STORE_NAME)) {
+      db.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true });
+    }
+  };
+
+  request.onsuccess = function(e) {
+    dbInstance = e.target.result;
+    logActivity("🗄️ Permanent database (IndexedDB) connected successfully.", "info");
+    
+    // Load records and run migrations
+    loadAllRecordsFromDB();
+  };
+
+  request.onerror = function() {
+    logActivity("❌ Permanent database connection failed! Standard Storage fallback active.", "err");
+    // Fallback to localStorage if blocked
+    const fallbackData = localStorage.getItem('insurance_ledger');
+    if (fallbackData) {
+      try { DATA = JSON.parse(fallbackData); } catch(ex) { DATA = []; }
+    } else {
+      DATA = [];
+    }
+    applyFiltersAndStats();
+  };
+
+  // Pre-fill simulator to actual local date or preserved simulated date
+  const preservedSimDate = localStorage.getItem('simulated_date');
+  if (preservedSimDate) {
+    SIMULATED_TODAY = new Date(preservedSimDate);
+    document.getElementById('dateSimulator').value = preservedSimDate;
+  } else {
+    const todayStr = new Date().toISOString().split('T')[0];
+    document.getElementById('dateSimulator').value = todayStr;
+    SIMULATED_TODAY = new Date(todayStr);
+  }
+  SIMULATED_TODAY.setHours(0,0,0,0);
+  
+  // Set default message template if not set
+  if (!localStorage.getItem('whatsapp_template')) {
+    const defaultTemplate = `Dear {name},\n\nThis is a friendly reminder that the insurance for your vehicle {vehicle} ({plate}) {expiry_status}.\n\n🚗 Vehicle: {vehicle}\n🔖 Plate Number: {plate}\n🏢 Provider: {insurance}\n📅 Expiry Date: {expiry}\n\nRemarks/Notes: {remarks}\n\nPlease renew at your earliest convenience to avoid penalties.\n\nThank you for choosing us!`;
+    localStorage.setItem('whatsapp_template', defaultTemplate);
+  }
+}
+
+function loadAllRecordsFromDB() {
+  const transaction = dbInstance.transaction([STORE_NAME], 'readwrite');
+  const store = transaction.objectStore(STORE_NAME);
+  
+  // Migration check: check if localStorage has data to migrate
+  const localData = localStorage.getItem('insurance_ledger');
+  if (localData) {
+    try {
+      const parsed = JSON.parse(localData);
+      if (parsed && parsed.length > 0) {
+        logActivity(`🗄️ One-time Migration: Transferring ${parsed.length} records to permanent database...`, "info");
+        let migratedCount = 0;
+        parsed.forEach(item => {
+          item.id = generateUniqueId();
+          const req = store.add(item);
+          req.onsuccess = function() {
+            migratedCount++;
+            if (migratedCount === parsed.length) {
+              logActivity(`✅ Migration Complete: safely stored ${parsed.length} client files permanently!`, "info");
+              localStorage.removeItem('insurance_ledger');
+              loadAllRecordsFromDB(); // reload properly
+            }
+          };
+        });
+        return; // wait for migration callback
+      }
+    } catch(e) {
+      console.error("Migration failed: ", e);
+    }
+  }
+  
+  // Load local IndexedDB records first!
+  const req = store.getAll();
+  req.onsuccess = function(e) {
+    const rawData = e.target.result || [];
+    let hasMigration = false;
+    
+    // Migrate any legacy numeric IDs to string IDs
+    rawData.forEach(item => {
+      if (typeof item.id === 'number') {
+        const oldId = item.id;
+        item.id = String(oldId);
+        store.put(item);
+        store.delete(oldId);
+        hasMigration = true;
+      }
+    });
+    
+    if (hasMigration) {
+      logActivity("🗄️ Database migration: converted legacy record numeric IDs to string IDs", "info");
+      loadAllRecordsFromDB(); // Reload updated records
+      return;
+    }
+    
+    DATA = rawData;
+    applyFiltersAndStats();
+    
+    // Cloud Sync pull check
+    const isCloudEnabled = localStorage.getItem('MMC_FIREBASE_ENABLED') === "true";
+    if (isCloudEnabled && initFirebase()) {
+      logActivity("☁️ Connecting to cloud registry sync...", "info");
+      
+      let isFirstLoad = true;
+      
+      dbCloud.collection("policies").onSnapshot((querySnapshot) => {
+        if (isFirstLoad) {
+          isFirstLoad = false;
+          
+          if (querySnapshot.empty && DATA.length > 0) {
+            // Cloud is empty, but local has data!
+            // Automatically push all local records to the cloud!
+            logActivity(`☁️ Auto Migration: Pushing ${DATA.length} local records to empty cloud...`, "info");
+            DATA.forEach(item => {
+              uploadPolicyToFirebase(item).catch(err => console.error(err));
+            });
+            return;
+          }
+        }
+        
+        const transaction = dbInstance.transaction([STORE_NAME], 'readwrite');
+        const store = transaction.objectStore(STORE_NAME);
+        let hasChanges = false;
+        
+        querySnapshot.docChanges().forEach((change) => {
+          const doc = change.doc;
+          const cloudItem = doc.data();
+          cloudItem.id = doc.id;
+          const docIdStr = String(cloudItem.id);
+          
+          // Exclude legacy 2025 entries
+          const expYear = new Date(cloudItem.end_date).getFullYear();
+          if (expYear === 2025) {
+            const localIndex = DATA.findIndex(item => String(item.id) === docIdStr);
+            if (localIndex > -1) {
+              DATA.splice(localIndex, 1);
+            }
+            store.delete(cloudItem.id);
+            hasChanges = true;
+            // Clean up from Firestore
+            dbCloud.collection("policies").doc(doc.id).delete().catch(()=>{});
+            return;
+          }
+          
+          if (change.type === "added" || change.type === "modified") {
+            if (uploadingDocIds.has(docIdStr)) {
+              // Retain local unsynced copy while uploading is in progress
+              return;
+            }
+            
+            const localIndex = DATA.findIndex(item => String(item.id) === docIdStr);
+            const localItem = localIndex > -1 ? DATA[localIndex] : null;
+            
+            let mergedItem = { ...cloudItem };
+            if (localItem) {
+              if (cloudItem.policy_doc && cloudItem.policy_doc.localOnly) {
+                if (localItem.policy_doc && localItem.policy_doc.data) {
+                  mergedItem.policy_doc = {
+                    ...cloudItem.policy_doc,
+                    data: localItem.policy_doc.data
+                  };
+                }
+              }
+              
+              if (Array.isArray(cloudItem.kyc_docs)) {
+                mergedItem.kyc_docs = cloudItem.kyc_docs.map((cloudKyc, kIdx) => {
+                  if (cloudKyc && cloudKyc.localOnly) {
+                    const localKyc = Array.isArray(localItem.kyc_docs) ? localItem.kyc_docs[kIdx] : null;
+                    if (localKyc && localKyc.data) {
+                      return {
+                        ...cloudKyc,
+                        data: localKyc.data
+                      };
+                    }
+                  }
+                  return cloudKyc;
+                });
+                mergedItem.kyc_doc = mergedItem.kyc_docs.length > 0 ? mergedItem.kyc_docs[0] : null;
+              }
+            }
+            
+            if (localIndex > -1) {
+              DATA[localIndex] = mergedItem;
+            } else {
+              DATA.push(mergedItem);
+            }
+            
+            store.put(mergedItem);
+            hasChanges = true;
+          }
+          
+          if (change.type === "removed") {
+            const localIndex = DATA.findIndex(item => String(item.id) === docIdStr);
+            if (localIndex > -1) {
+              DATA.splice(localIndex, 1);
+            }
+            store.delete(cloudItem.id);
+            hasChanges = true;
+          }
+        });
+        
+        transaction.oncomplete = function() {
+          if (hasChanges) {
+            applyFiltersAndStats();
+          }
+        };
+        
+        logActivity(`☁️ Cloud Synced: Incremental live sync completed.`, "info");
+      }, (err) => {
+        console.error("Firebase read error: ", err);
+        logActivity("❌ Cloud Sync connection offline! Using local offline ledger.", "err");
+      });
+    }
+  };
+}
+
+function fetchRecords(store) {
+  const req = store.getAll();
+  req.onsuccess = function(e) {
+    DATA = e.target.result || [];
+    
+    // Dynamic cleanup: clear any 2025 records
+    const originalLength = DATA.length;
+    const keptRecords = [];
+    const removedRecords = [];
+    DATA.forEach(item => {
+      const expYear = new Date(item.end_date).getFullYear();
+      if (expYear === 2025) {
+        removedRecords.push(item);
+      } else {
+        keptRecords.push(item);
+      }
+    });
+    
+    if (removedRecords.length > 0) {
+      DATA = keptRecords;
+      saveAllToIndexedDB(false, false); // Save kept ones locally (no need to sync back to cloud since they are already there)
+      
+      // Delete removed ones from cloud
+      const isCloudEnabled = localStorage.getItem('MMC_FIREBASE_ENABLED') === "true";
+      if (isCloudEnabled && firebaseInitialized) {
+        removedRecords.forEach(item => {
+          if (item.id) {
+            dbCloud.collection("policies").doc(String(item.id)).delete().catch(()=>{});
+            if (storageCloud) {
+              storageCloud.ref().child(`policies/${item.id}/policy_doc`).delete().catch(()=>{});
+              const docs = Array.isArray(item.kyc_docs) ? item.kyc_docs : [];
+              docs.forEach((doc, dIdx) => {
+                storageCloud.ref().child(`policies/${item.id}/kyc_doc_${dIdx}`).delete().catch(()=>{});
+              });
+            }
+          }
+        });
+      }
+      setTimeout(() => logActivity(`🗑️ dynamic cleanup: Cleared ${removedRecords.length} old 2025 records.`, "err"), 100);
+    }
+    
+    applyFiltersAndStats();
+  };
+}
+
+function saveDatabase() {
+  // Redundant lightweight backup of text fields to local storage
+  try {
+    const backupTextOnly = DATA.map(item => {
+      const copy = { ...item };
+      delete copy.policy_doc;
+      delete copy.kyc_doc;
+      delete copy.kyc_docs;
+      return copy;
+    });
+    localStorage.setItem('insurance_ledger_backup', JSON.stringify(backupTextOnly));
+  } catch(e) {
+    // silently fail
+  }
+}
+
+// Utility to completely rewrite IndexedDB (used for batch updates / cleanup)
+function saveAllToIndexedDB(syncToCloud = false, isOverwrite = false) {
+  const transaction = dbInstance.transaction([STORE_NAME], 'readwrite');
+  const store = transaction.objectStore(STORE_NAME);
+  store.clear().onsuccess = function() {
+    DATA.forEach(item => {
+      if (!item.hasOwnProperty('id') || item.id === undefined || item.id === null || item.id === '') {
+        item.id = generateUniqueId();
+      }
+      const req = store.add(item);
+      req.onsuccess = function(e) {
+        
+        if (syncToCloud) {
+          if (isOverwrite || item._isNew) {
+            delete item._isNew; // clean up temp flag
+            const isCloudEnabled = localStorage.getItem('MMC_FIREBASE_ENABLED') === "true";
+            if (isCloudEnabled && firebaseInitialized) {
+              uploadPolicyToFirebase(item).catch(err => {
+                console.error("Auto-sync error during saveAllToIndexedDB:", err);
+              });
+            }
+          }
+        }
+      };
+    });
+  };
+}
+
+// Compress image helper using HTML5 canvas
+function compressImageBase64(file) {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target.result;
+      img.onload = () => {
+        const maxWidth = 1200;
+        const maxHeight = 1200;
+        let width = img.width;
+        let height = img.height;
+        
+        if (width > maxWidth || height > maxHeight) {
+          if (width > height) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          } else {
+            width = Math.round((width * maxHeight) / height);
+            height = maxHeight;
+          }
+        }
+        
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.6);
+        resolve(compressedDataUrl);
+      };
+      img.onerror = () => {
+        resolve(event.target.result); // fallback to original base64 if loading image fails
+      };
+    };
+    reader.onerror = () => {
+      resolve(null);
+    };
+  });
+}
+
+// File helper: Convert file inputs to Base64 objects (compresses images automatically!)
+function getFileData(fileInput) {
+  return new Promise(async (resolve) => {
+    const file = fileInput.files[0];
+    if (!file) {
+      resolve(null);
+      return;
+    }
+    
+    // Check if image for auto-compression
+    if (file.type.startsWith('image/')) {
+      const compressedData = await compressImageBase64(file);
+      resolve({
+        name: file.name,
+        type: 'image/jpeg',
+        data: compressedData
+      });
+      return;
+    }
+    
+    // Check file size limits (Allow up to 10MB universally)
+    const limit = 10 * 1024 * 1024;
+    if (file.size > limit) {
+      showToast(`⚠️ File "${file.name}" exceeds the 10MB limit!`, true);
+      resolve(null);
+      return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      resolve({
+        name: file.name,
+        type: file.type,
+        data: e.target.result // Base64 data URL
+      });
+    };
+    reader.onerror = function() {
+      resolve(null);
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+// File helper: Convert file inputs to multiple Base64 objects (compresses images automatically!)
+function getMultipleFilesData(fileInput) {
+  return new Promise(async (resolve) => {
+    const files = fileInput.files;
+    if (!files || files.length === 0) {
+      resolve([]);
+      return;
+    }
+    
+    const results = [];
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      let docData = null;
+      
+      if (file.type.startsWith('image/')) {
+        docData = await compressImageBase64(file);
+      } else {
+        // Check file size limits (Allow up to 10MB universally)
+        const limit = 10 * 1024 * 1024;
+        if (file.size > limit) {
+          showToast(`⚠️ File "${file.name}" exceeds the 10MB limit!`, true);
+          continue;
+        }
+        
+        docData = await new Promise((resolveFile) => {
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            resolveFile(e.target.result);
+          };
+          reader.onerror = function() {
+            resolveFile(null);
+          };
+          reader.readAsDataURL(file);
+        });
+      }
+      
+      if (docData) {
+        results.push({
+          name: file.name,
+          type: file.type.startsWith('image/') ? 'image/jpeg' : file.type,
+          data: docData
+        });
+      }
+    }
+    resolve(results);
+  });
+}
+
+// File helper: show single file preview in forms
+function previewUploadFile(input, previewId) {
+  const file = input.files[0];
+  const label = document.getElementById(previewId);
+  if (file) {
+    let sizeStr = '';
+    if (file.size > 1024 * 1024) sizeStr = (file.size / (1024 * 1024)).toFixed(2) + ' MB';
+    else sizeStr = (file.size / 1024).toFixed(1) + ' KB';
+    
+    label.innerHTML = `<i class="fa-solid fa-file-circle-check" style="color:var(--accent);"></i> ${file.name} (${sizeStr})`;
+  } else {
+    label.textContent = "No file attached";
+  }
+}
+
+// File helper: show multiple file previews in forms
+function previewUploadFilesMultiple(input, previewId) {
+  const files = input.files;
+  const label = document.getElementById(previewId);
+  if (files && files.length > 0) {
+    let text = `<i class="fa-solid fa-file-circle-check" style="color:var(--purple);"></i> Selected ${files.length} file(s):<br/>`;
+    let fileList = [];
+    for(let i=0; i<files.length; i++) {
+      let file = files[i];
+      let sizeStr = '';
+      if (file.size > 1024 * 1024) sizeStr = (file.size / (1024 * 1024)).toFixed(2) + ' MB';
+      else sizeStr = (file.size / 1024).toFixed(1) + ' KB';
+      fileList.push(`<span style="display:inline-block; margin-top:4px; margin-right:4px; font-size:11px; background:rgba(255,255,255,0.05); padding:2px 6px; border-radius:4px; border:1px solid var(--border); color:var(--text-muted);"><i class="fa-solid fa-paperclip" style="color:var(--purple);font-size:10px;"></i> ${file.name} (${sizeStr})</span>`);
+    }
+    label.innerHTML = text + fileList.join(' ');
+  } else {
+    label.textContent = "No files attached";
+  }
+}
+
+// File helper: download base64 documents safely in client-side
+function downloadDoc(idx, type) {
+  const item = DATA[idx];
+  if (type === 'policy') {
+    const doc = item.policy_doc;
+    if (!doc) return;
+    triggerFileDownload(doc, item.name);
+  } else {
+    const docs = Array.isArray(item.kyc_docs) ? item.kyc_docs : (item.kyc_doc ? [item.kyc_doc] : []);
+    if (docs.length === 0) return;
+    
+    // Download each file sequentially with a 350ms delay to prevent browser blockages
+    docs.forEach((doc, dIdx) => {
+      setTimeout(() => {
+        triggerFileDownload(doc, item.name);
+      }, dIdx * 350);
+    });
+  }
+}
+
+function triggerFileDownload(doc, clientName) {
+  if (doc.url) {
+    window.open(doc.url, '_blank');
+    logActivity(`📥 Opened cloud document: ${doc.name} for client ${clientName}`, "info");
+    showToast(`Opening: ${doc.name}`);
+    return;
+  }
+  
+  if (doc.localOnly || !doc.data) {
+    showToast("⚠️ This file is stored locally on the device that uploaded it (Cloud Storage is disabled). Please ask them to share it directly or upgrade the Firebase plan.", true);
+    logActivity(`⚠️ Failed to download document: ${doc.name} (stored locally on uploading device)`, "err");
+    return;
+  }
+  
+  try {
+    const parts = doc.data.split(';base64,');
+    const contentType = parts[0].split(':')[1];
+    const raw = window.atob(parts[1]);
+    const rawLength = raw.length;
+    const uInt8Array = new Uint8Array(rawLength);
+    
+    for (let i = 0; i < rawLength; ++i) {
+      uInt8Array[i] = raw.charCodeAt(i);
+    }
+    
+    const blob = new Blob([uInt8Array], { type: contentType });
+    const url = URL.createObjectURL(blob);
+    
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = doc.name;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    logActivity(`📥 Downloaded document: ${doc.name} for client ${clientName}`, "info");
+    showToast(`Downloading: ${doc.name}`);
+  } catch(e) {
+    window.open(doc.data, '_blank');
+    logActivity(`📥 Opened document in new window for client ${clientName}`, "info");
+  }
+}
+
+// Session Audit Logging
+function logActivity(text, type = "default") {
+  const ledger = document.getElementById('activityLedger');
+  const now = new Date();
+  const timeStr = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  
+  const row = document.createElement('div');
+  row.className = `ledger-row ${type}`;
+  row.innerHTML = `<span class="time">[${timeStr}]</span> <span>${text}</span>`;
+  
+  ledger.insertBefore(row, ledger.firstChild);
+  
+  // Cap ledger items to 50
+  if (ledger.childNodes.length > 50) {
+    ledger.removeChild(ledger.lastChild);
+  }
+}
+
+// Expiry Indicator Helper
+function getDaysBucket(daysLeft) {
+  if (daysLeft < 0) return 'expired';
+  if (daysLeft === 0) return 'today';
+  if (daysLeft <= 1) return 'days1';
+  if (daysLeft <= 3) return 'days3';
+  if (daysLeft <= 7) return 'days7';
+  return 'future';
+}
+
+function formatDaysLabel(daysLeft) {
+  if (daysLeft < 0) return `${Math.abs(daysLeft)}d Expired`;
+  if (daysLeft === 0) return 'TODAY';
+  if (daysLeft === 1) return 'TOMORROW';
+  return `${daysLeft} Days`;
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return 'N/A';
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return dateStr;
+  
+  const day = String(d.getDate()).padStart(2, '0');
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const month = months[d.getMonth()];
+  const year = d.getFullYear();
+  
+  return `${day} ${month} ${year}`;
+}
+
+function formatCurrency(val) {
+  if (!val || isNaN(val)) return '₹0';
+  return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(val);
+}
+
+// Indian mobile cleanup
+function cleanAndFormatPhone(val) {
+  if (!val) return '';
+  let clean = String(val).replace(/[^0-9]/g, '');
+  if (clean.length === 10) return '+91' + clean;
+  if (clean.length === 12 && clean.startsWith('91')) return '+' + clean;
+  return val;
+}
+
+// Format plate layout
+function formatPlateNumber(val) {
+  return String(val).toUpperCase().trim().replace(/\s+/g, '');
+}
+
+// TOAST NOTIFICATIONS
+function showToast(msg, isError = false) {
+  const t = document.getElementById('toast');
+  const icon = document.getElementById('toastIcon');
+  document.getElementById('toastMsg').textContent = msg;
+  
+  if (isError) {
+    t.classList.add('err');
+    icon.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i>';
+  } else {
+    t.classList.remove('err');
+    icon.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
+  }
+  
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ==============================================
+// CRUD CONTROLLERS
+// ==============================================
+// openImportModal removed
+
+function openAddModal() {
+  // Clear inputs
+  document.getElementById('addName').value = '';
+  document.getElementById('addVehicle').value = '';
+  document.getElementById('addPlate').value = '';
+  document.getElementById('addInsurance').value = '';
+  document.getElementById('addPolicyNo').value = '';
+  
+  const addStart = document.getElementById('addStartDate');
+  const addEnd = document.getElementById('addEndDate');
+  if (addStart._flatpickr) addStart._flatpickr.clear();
+  else addStart.value = '';
+  if (addEnd._flatpickr) addEnd._flatpickr.clear();
+  else addEnd.value = '';
+
+  document.getElementById('addAmount').value = '';
+  document.getElementById('addPhone').value = '';
+  document.getElementById('addNotes').value = '';
+  
+  // Clear document files inputs and previews
+  document.getElementById('addPolicyDoc').value = '';
+  document.getElementById('addKycDoc').value = '';
+  document.getElementById('addPolicyPreview').textContent = 'No file attached';
+  document.getElementById('addKycPreview').textContent = 'No files attached';
+  
+  openModal('addModal');
+}
+
+async function submitAddEntry() {
+  const name = document.getElementById('addName').value.trim();
+  const vehicle = document.getElementById('addVehicle').value.trim();
+  const plate = document.getElementById('addPlate').value.trim();
+  const insurance = document.getElementById('addInsurance').value.trim();
+  const policyNo = document.getElementById('addPolicyNo').value.trim();
+  const startDate = document.getElementById('addStartDate').value;
+  const endDate = document.getElementById('addEndDate').value;
+  const amount = document.getElementById('addAmount').value;
+  const phone = document.getElementById('addPhone').value.trim();
+  const notes = document.getElementById('addNotes').value.trim();
+  
+  if (!name || !vehicle || !plate || !insurance || !endDate || !phone) {
+    showToast("Please fill in all mandatory (*) fields!", true);
+    return;
+  }
+  
+  // Read document files
+  const policyDoc = await getFileData(document.getElementById('addPolicyDoc'));
+  const kycDocs = await getMultipleFilesData(document.getElementById('addKycDoc'));
+  
+  const newEntry = {
+    id: generateUniqueId(),
+    name: name,
+    vehicle: vehicle,
+    plate: formatPlateNumber(plate),
+    insurance: insurance,
+    policy_no: policyNo,
+    start_date: startDate,
+    end_date: endDate,
+    amount: amount ? Number(amount) : '',
+    phone: cleanAndFormatPhone(phone),
+    notes: notes,
+    policy_doc: policyDoc,
+    kyc_docs: kycDocs,
+    kyc_doc: kycDocs.length > 0 ? kycDocs[0] : null // compatibility
+  };
+  
+  // Save to IndexedDB
+  const transaction = dbInstance.transaction([STORE_NAME], 'readwrite');
+  const store = transaction.objectStore(STORE_NAME);
+  const req = store.add(newEntry);
+  
+  req.onsuccess = async function(e) {
+    newEntry.id = e.target.result; // Set autoincrement primary key
+    DATA.push(newEntry);
+    saveDatabase(); // reduntant fallback
+    
+    // Cloud Sync write
+    const isCloudEnabled = localStorage.getItem('MMC_FIREBASE_ENABLED') === "true";
+    if (isCloudEnabled && firebaseInitialized) {
+      uploadPolicyToFirebase(newEntry).catch(err => {
+        console.error("Cloud upload error:", err);
+        showToast("⚠️ Cloud Sync Failed: Check file sizes or Firebase settings!", true);
+      });
+    }
+    
+    closeModal('addModal');
+    applyFiltersAndStats();
+    showToast(`Successfully added record for ${name}!`);
+    logActivity(`➕ Added daily policy register: ${name} (${formatPlateNumber(plate)})`, "info");
+  };
+  
+  req.onerror = function() {
+    showToast("Failed to save to database!", true);
+  };
+}
+
+function openEditModal(idx) {
+  const item = DATA[idx];
+  document.getElementById('editIndex').value = idx;
+  document.getElementById('editName').value = item.name;
+  document.getElementById('editVehicle').value = item.vehicle;
+  document.getElementById('editPlate').value = item.plate;
+  document.getElementById('editInsurance').value = item.insurance;
+  document.getElementById('editPolicyNo').value = item.policy_no || '';
+  
+  const editStart = document.getElementById('editStartDate');
+  const editEnd = document.getElementById('editEndDate');
+  if (editStart._flatpickr) editStart._flatpickr.setDate(item.start_date || '');
+  else editStart.value = item.start_date || '';
+  if (editEnd._flatpickr) editEnd._flatpickr.setDate(item.end_date || '');
+  else editEnd.value = item.end_date || '';
+  
+  document.getElementById('editAmount').value = item.amount || '';
+  document.getElementById('editPhone').value = item.phone;
+  document.getElementById('editNotes').value = item.notes || '';
+  
+  // Reset file selectors
+  document.getElementById('editPolicyDoc').value = '';
+  document.getElementById('editKycDoc').value = '';
+  
+  // Load existing files previews
+  const policyPrev = document.getElementById('editPolicyPreview');
+  if (item.policy_doc) {
+    policyPrev.innerHTML = `<i class="fa-solid fa-file-pdf" style="color:var(--accent);"></i> Already Attached: <strong>${item.policy_doc.name}</strong>`;
+  } else {
+    policyPrev.textContent = "No file attached";
+  }
+  
+  const kycPrev = document.getElementById('editKycPreview');
+  const kycDocs = Array.isArray(item.kyc_docs) ? item.kyc_docs : (item.kyc_doc ? [item.kyc_doc] : []);
+  if (kycDocs.length > 0) {
+    let pills = kycDocs.map(doc => `<span style="display:inline-block; margin-top:4px; margin-right:4px; font-size:11px; background:rgba(255,255,255,0.05); padding:2px 6px; border-radius:4px; border:1px solid var(--border); color:var(--text-muted);"><i class="fa-solid fa-paperclip" style="color:var(--purple);font-size:10px;"></i> ${doc.name}</span>`).join(' ');
+    kycPrev.innerHTML = `<i class="fa-solid fa-id-card" style="color:var(--purple);"></i> Already Attached (${kycDocs.length} file(s)):<br/>${pills}<br/><span style="font-size:10.5px;color:var(--amber);margin-top:4px;display:inline-block;"><i class="fa-solid fa-triangle-exclamation"></i> Selecting new files will replace all existing KYC attachments!</span>`;
+  } else {
+    kycPrev.textContent = "No files attached";
+  }
+  
+  openModal('editModal');
+}
+
+async function submitEditEntry() {
+  const idx = Number(document.getElementById('editIndex').value);
+  const name = document.getElementById('editName').value.trim();
+  const vehicle = document.getElementById('editVehicle').value.trim();
+  const plate = document.getElementById('editPlate').value.trim();
+  const insurance = document.getElementById('editInsurance').value.trim();
+  const policyNo = document.getElementById('editPolicyNo').value.trim();
+  const startDate = document.getElementById('editStartDate').value;
+  const endDate = document.getElementById('editEndDate').value;
+  const amount = document.getElementById('editAmount').value;
+  const phone = document.getElementById('editPhone').value.trim();
+  const notes = document.getElementById('editNotes').value.trim();
+  
+  if (!name || !vehicle || !plate || !insurance || !endDate || !phone) {
+    showToast("Please fill in all mandatory fields!", true);
+    return;
+  }
+  
+  // Process attachments (preserve existing if no new ones are uploaded)
+  let policyDoc = await getFileData(document.getElementById('editPolicyDoc'));
+  if (!policyDoc && DATA[idx].policy_doc) {
+    policyDoc = DATA[idx].policy_doc;
+  }
+  
+  let kycDocs = await getMultipleFilesData(document.getElementById('editKycDoc'));
+  if (kycDocs.length === 0) {
+    // Preserve existing kyc_docs if no new files selected
+    kycDocs = Array.isArray(DATA[idx].kyc_docs) ? DATA[idx].kyc_docs : (DATA[idx].kyc_doc ? [DATA[idx].kyc_doc] : []);
+  }
+  
+  const updatedEntry = {
+    ...DATA[idx],
+    name: name,
+    vehicle: vehicle,
+    plate: formatPlateNumber(plate),
+    insurance: insurance,
+    policy_no: policyNo,
+    start_date: startDate,
+    end_date: endDate,
+    amount: amount ? Number(amount) : '',
+    phone: cleanAndFormatPhone(phone),
+    notes: notes,
+    policy_doc: policyDoc,
+    kyc_docs: kycDocs,
+    kyc_doc: kycDocs.length > 0 ? kycDocs[0] : null // compatibility
+  };
+  
+  // Write to IndexedDB
+  const transaction = dbInstance.transaction([STORE_NAME], 'readwrite');
+  const store = transaction.objectStore(STORE_NAME);
+  const req = store.put(updatedEntry);
+  
+  req.onsuccess = async function() {
+    DATA[idx] = updatedEntry;
+    saveDatabase(); // redundant fallback
+    
+    // Cloud Sync write
+    const isCloudEnabled = localStorage.getItem('MMC_FIREBASE_ENABLED') === "true";
+    if (isCloudEnabled && firebaseInitialized) {
+      uploadPolicyToFirebase(updatedEntry).catch(err => {
+        console.error("Cloud update error:", err);
+        showToast("⚠️ Cloud Sync Failed: Check file sizes or Firebase settings!", true);
+      });
+    }
+    
+    closeModal('editModal');
+    applyFiltersAndStats();
+    showToast(`Successfully updated register for ${name}`);
+    logActivity("📝 Updated ledger entry: " + name + " (" + formatPlateNumber(plate) + ")", "info");
+  };
+  
+  req.onerror = function() {
+    showToast("Failed to update database!", true);
+  };
+}
+
+function deleteEntry(idx) {
+  if (confirm(`Are you absolutely sure you want to delete the record for ${DATA[idx].name}?`)) {
+    const itemToDelete = DATA[idx];
+    const name = itemToDelete.name;
+    const plate = itemToDelete.plate;
+    const dbId = itemToDelete.id;
+    
+    const transaction = dbInstance.transaction([STORE_NAME], 'readwrite');
+    const store = transaction.objectStore(STORE_NAME);
+    const req = store.delete(dbId);
+    
+    req.onsuccess = function() {
+      // Cloud Sync delete
+      const isCloudEnabled = localStorage.getItem('MMC_FIREBASE_ENABLED') === "true";
+      if (isCloudEnabled && firebaseInitialized) {
+        dbCloud.collection("policies").doc(String(dbId)).delete().catch(()=>{});
+        if (storageCloud) {
+          storageCloud.ref().child(`policies/${dbId}/policy_doc`).delete().catch(()=>{});
+          const docs = Array.isArray(itemToDelete.kyc_docs) ? itemToDelete.kyc_docs : [];
+          docs.forEach((doc, dIdx) => {
+            storageCloud.ref().child(`policies/${dbId}/kyc_doc_${dIdx}`).delete().catch(()=>{});
+          });
+        }
+      }
+      
+      DATA.splice(idx, 1);
+      saveDatabase(); // redundant fallback
+      applyFiltersAndStats();
+      showToast(`Removed policy register for ${name}`);
+      logActivity(`❌ Deleted policy register: ${name} (${plate})`, "err");
+    };
+    
+    req.onerror = function() {
+      showToast("Failed to delete from database!", true);
+    };
+  }
+}
+
+// Bulk delete controller
+function deleteSelected() {
+  const checkboxes = document.querySelectorAll('.row-cb:checked');
+  if (checkboxes.length === 0) return;
+  
+  if (confirm(`Are you absolutely sure you want to delete ${checkboxes.length} selected policy records? This action is permanent!`)) {
+    const indicesToDelete = Array.from(checkboxes).map(cb => Number(cb.dataset.index)).sort((a,b) => b - a);
+    
+    const transaction = dbInstance.transaction([STORE_NAME], 'readwrite');
+    const store = transaction.objectStore(STORE_NAME);
+    
+    let deletedCount = 0;
+    
+    indicesToDelete.forEach(idx => {
+      const itemToDelete = DATA[idx];
+      const dbId = itemToDelete.id;
+      const req = store.delete(dbId);
+      req.onsuccess = function() {
+        // Cloud Sync delete
+        const isCloudEnabled = localStorage.getItem('MMC_FIREBASE_ENABLED') === "true";
+        if (isCloudEnabled && firebaseInitialized) {
+          dbCloud.collection("policies").doc(String(dbId)).delete().catch(()=>{});
+          if (storageCloud) {
+            storageCloud.ref().child(`policies/${dbId}/policy_doc`).delete().catch(()=>{});
+            const docs = Array.isArray(itemToDelete.kyc_docs) ? itemToDelete.kyc_docs : [];
+            docs.forEach((doc, dIdx) => {
+              storageCloud.ref().child(`policies/${dbId}/kyc_doc_${dIdx}`).delete().catch(()=>{});
+            });
+          }
+        }
+        
+        DATA.splice(idx, 1);
+        deletedCount++;
+        if (deletedCount === indicesToDelete.length) {
+          saveDatabase(); // redundant fallback
+          document.getElementById('selectAllCheckbox').checked = false;
+          applyFiltersAndStats();
+          showToast(`Wiped ${indicesToDelete.length} records successfully.`);
+          logActivity(`🗑️ Bulk Deleted: ${indicesToDelete.length} records wiped from register ledger`, "err");
+        }
+      };
+    });
+  }
+}
+
+// ==============================================
+// VIEW SWITCHER & INTERACTIVE ANALYTICS ENGINE
+// ==============================================
+let currentView = 'table';
+let providerChartInstance = null;
+let urgencyChartInstance = null;
+let timelineChartInstance = null;
+
+function switchView(viewName) {
+  currentView = viewName;
+  const tableView = document.getElementById('registerTableView');
+  const analyticsView = document.getElementById('analyticsView');
+  const btnTable = document.getElementById('btnTableView');
+  const btnAnalytics = document.getElementById('btnAnalyticsView');
+
+  if (viewName === 'analytics') {
+    tableView.style.display = 'none';
+    analyticsView.style.display = 'block';
+    btnTable.classList.remove('active-view');
+    btnAnalytics.classList.add('active-view');
+    renderAnalyticsCharts();
+  } else {
+    tableView.style.display = 'block';
+    analyticsView.style.display = 'none';
+    btnTable.classList.add('active-view');
+    btnAnalytics.classList.remove('active-view');
+  }
+}
+
+function renderAnalyticsCharts() {
+  const targetYear = document.getElementById('targetYearFilter').value;
+  
+  // Filter active items for the target year
+  const activeItems = DATA.filter(item => {
+    const expDate = new Date(item.end_date);
+    return targetYear === 'all' || (expDate.getFullYear() === Number(targetYear));
+  });
+
+  // --- 1. INSURANCE PROVIDER SHARE ---
+  const providerCounts = {};
+  activeItems.forEach(item => {
+    const prov = (item.insurance || 'UNKNOWN').toUpperCase().trim();
+    providerCounts[prov] = (providerCounts[prov] || 0) + 1;
+  });
+
+  const providerLabels = Object.keys(providerCounts);
+  const providerData = Object.values(providerCounts);
+  
+  // Custom provider color mapping matching tag classes
+  const providerColors = {
+    'TATA': '#000000',
+    'SBI': '#333333',
+    'BAJAJ': '#666666',
+    'DIGIT': '#999999',
+    'NEW INDIA': '#cccccc',
+    'NEWINDIA': '#cccccc',
+    'UNKNOWN': '#e5e5e5'
+  };
+
+  const defaultColors = ['#000000', '#1c1c1c', '#383838', '#555555', '#717171', '#8d8d8d', '#aaaaaa', '#c6c6c6', '#e3e3e3'];
+  const chartColors = providerLabels.map((lbl, idx) => providerColors[lbl] || defaultColors[idx % defaultColors.length]);
+
+  document.getElementById('chartProviderTotal').textContent = `${activeItems.length} Total Policies`;
+
+  // Destroy previous instance to prevent overlapping hover glitches
+  if (providerChartInstance) {
+    providerChartInstance.destroy();
+  }
+
+  const ctxProvider = document.getElementById('chartProviderShare').getContext('2d');
+  providerChartInstance = new Chart(ctxProvider, {
+    type: 'doughnut',
+    data: {
+      labels: providerLabels,
+      datasets: [{
+        data: providerData,
+        backgroundColor: chartColors,
+        borderWidth: 2,
+        borderColor: '#ffffff',
+        hoverOffset: 12
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'right',
+          labels: {
+            font: { family: 'DM Sans', size: 11, weight: '600' },
+            color: '#1e293b',
+            boxWidth: 12
+          }
+        },
+        tooltip: {
+          titleFont: { family: 'DM Sans', weight: '700' },
+          bodyFont: { family: 'DM Sans' },
+          padding: 10,
+          cornerRadius: 8
+        }
+      },
+      cutout: '65%'
+    }
+  });
+
+  // --- 2. POLICY EXPIRY URGENCY ---
+  let expired = 0, today = 0, urgent = 0, incoming = 0, safe = 0;
+  activeItems.forEach(item => {
+    const exp = new Date(item.end_date);
+    exp.setHours(0,0,0,0);
+    const diff = Math.ceil((exp - SIMULATED_TODAY) / 86400000);
+    
+    if (diff < 0) expired++;
+    else if (diff === 0) today++;
+    else if (diff <= 3) urgent++;
+    else if (diff <= 7) incoming++;
+    else safe++;
+  });
+
+  const urgencyLabels = ['Expired', 'Due Today', 'Urgent (≤3d)', 'Incoming (≤7d)', 'Safe (>7d)'];
+  const urgencyData = [expired, today, urgent, incoming, safe];
+  const urgencyColors = ['#000000', '#222222', '#555555', '#888888', '#cccccc'];
+
+  document.getElementById('chartUrgencyTotal').textContent = `Urgent Policies: ${expired + today + urgent}`;
+
+  if (urgencyChartInstance) {
+    urgencyChartInstance.destroy();
+  }
+
+  const ctxUrgency = document.getElementById('chartUrgencyDist').getContext('2d');
+  urgencyChartInstance = new Chart(ctxUrgency, {
+    type: 'polarArea',
+    data: {
+      labels: urgencyLabels,
+      datasets: [{
+        data: urgencyData,
+        backgroundColor: urgencyColors.map(c => c + 'cc'),
+        borderColor: '#ffffff',
+        borderWidth: 1.5
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        r: {
+          ticks: { display: false },
+          grid: { color: 'rgba(0,0,0,0.05)' }
+        }
+      },
+      plugins: {
+        legend: {
+          position: 'right',
+          labels: {
+            font: { family: 'DM Sans', size: 11, weight: '600' },
+            color: '#1e293b',
+            boxWidth: 12
+          }
+        },
+        tooltip: {
+          titleFont: { family: 'DM Sans', weight: '700' },
+          bodyFont: { family: 'DM Sans' },
+          padding: 10,
+          cornerRadius: 8
+        }
+      }
+    }
+  });
+
+  // --- 3. MONTHLY RENEWAL TIMELINE (PREMIUM FORECAST) ---
+  const monthlyPremiums = Array(12).fill(0);
+  const monthlyCounts = Array(12).fill(0);
+  activeItems.forEach(item => {
+    const expDate = new Date(item.end_date);
+    const m = expDate.getMonth();
+    if (m >= 0 && m < 12) {
+      monthlyPremiums[m] += Number(item.amount) || 0;
+      monthlyCounts[m] += 1;
+    }
+  });
+
+  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  
+  let totalPremiumExpiring = monthlyPremiums.reduce((a, b) => a + b, 0);
+  document.getElementById('chartTimelineTotal').textContent = `Total Expiring Premium: ₹${totalPremiumExpiring.toLocaleString('en-IN')}`;
+
+  if (timelineChartInstance) {
+    timelineChartInstance.destroy();
+  }
+
+  const ctxTimeline = document.getElementById('chartRenewalTimeline').getContext('2d');
+  timelineChartInstance = new Chart(ctxTimeline, {
+    type: 'bar',
+    data: {
+      labels: monthNames,
+      datasets: [
+        {
+          label: 'Premium Expiring (₹)',
+          data: monthlyPremiums,
+          backgroundColor: 'rgba(51, 51, 51, 0.75)',
+          hoverBackgroundColor: 'rgba(0, 0, 0, 0.95)',
+          borderRadius: 6,
+          yAxisID: 'yPremium',
+          borderWidth: 0
+        },
+        {
+          label: 'Policy Count',
+          data: monthlyCounts,
+          type: 'line',
+          borderColor: '#000000',
+          backgroundColor: 'rgba(0, 0, 0, 0.05)',
+          borderWidth: 3,
+          tension: 0.35,
+          yAxisID: 'yCount',
+          pointBackgroundColor: '#000000',
+          pointRadius: 4
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: {
+        mode: 'index',
+        intersect: false
+      },
+      scales: {
+        x: {
+          grid: { display: false },
+          ticks: { font: { family: 'DM Sans', weight: '600' }, color: '#64748b' }
+        },
+        yPremium: {
+          type: 'linear',
+          position: 'left',
+          grid: { color: 'rgba(0,0,0,0.05)' },
+          ticks: {
+            font: { family: 'DM Sans' },
+            color: '#64748b',
+            callback: function(value) { return '₹' + (value >= 1000 ? (value / 1000) + 'k' : value); }
+          }
+        },
+        yCount: {
+          type: 'linear',
+          position: 'right',
+          grid: { drawOnChartArea: false },
+          ticks: {
+            font: { family: 'DM Sans' },
+            color: '#64748b',
+            stepSize: 1
+          }
+        }
+      },
+      plugins: {
+        legend: {
+          position: 'top',
+          labels: {
+            font: { family: 'DM Sans', size: 11, weight: '600' },
+            color: '#1e293b',
+            boxWidth: 12
+          }
+        },
+        tooltip: {
+          titleFont: { family: 'DM Sans', weight: '700' },
+          bodyFont: { family: 'DM Sans' },
+          padding: 12,
+          cornerRadius: 8,
+          callbacks: {
+            label: function(context) {
+              let label = context.dataset.label || '';
+              if (label) {
+                label += ': ';
+              }
+              if (context.datasetIndex === 0) {
+                label += '₹' + context.raw.toLocaleString('en-IN');
+              } else {
+                label += context.raw;
+              }
+              return label;
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+// ==============================================
+// VIEW RENDERING ENGINE & STATISTICS
+// ==============================================
+function updateSimulatedDate() {
+  const selectedDate = document.getElementById('dateSimulator').value;
+  if (!selectedDate) return;
+  SIMULATED_TODAY = new Date(selectedDate);
+  SIMULATED_TODAY.setHours(0,0,0,0);
+  localStorage.setItem('simulated_date', selectedDate);
+  
+  // Update Header Date label
+  document.getElementById('todayDateLabel').textContent = SIMULATED_TODAY.toLocaleDateString('en-IN', { weekday: 'short', day: '2-digit', month: 'long', year: 'numeric' });
+  
+  applyFiltersAndStats();
+  logActivity(`⏰ Register calendar simulated to: ${formatDate(selectedDate)}`, "info");
+}
+
+function resetSimulatedDate() {
+  const todayStr = new Date().toISOString().split('T')[0];
+  document.getElementById('dateSimulator').value = todayStr;
+  localStorage.removeItem('simulated_date');
+  
+  SIMULATED_TODAY = new Date(todayStr);
+  SIMULATED_TODAY.setHours(0,0,0,0);
+  document.getElementById('todayDateLabel').textContent = SIMULATED_TODAY.toLocaleDateString('en-IN', { weekday: 'short', day: '2-digit', month: 'long', year: 'numeric' });
+  
+  applyFiltersAndStats();
+  logActivity("⏰ Simulated calendar reset back to current actual system time.", "info");
+}
+
+function setStatusFilter(filter, el) {
+  activeStatusFilter = filter;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  applyFiltersAndStats();
+}
+
+function applyFiltersAndStats() {
+  const query = document.getElementById('searchBox').value.trim();
+  const selectedMonth = document.getElementById('monthFilter').value;
+  const targetYear = document.getElementById('targetYearFilter').value;
+  
+  // Track sent set
+  const sentSet = new Set(JSON.parse(localStorage.getItem('waSent') || '[]'));
+  
+  // Enrich items with computed statistics
+  const enriched = DATA.map((item, idx) => {
+    const exp = new Date(item.end_date);
+    exp.setHours(0,0,0,0);
+    const diff = Math.ceil((exp - SIMULATED_TODAY) / 86400000);
+    return { ...item, originalIdx: idx, daysLeft: diff, expDate: exp };
+  });
+
+  // Calculate Statistics FOR TARGET YEAR (before table filters)
+  let totalPremium = 0;
+  let activePremiumCount = 0;
+  let expiredCount = 0;
+  let urgentCount = 0;
+  let incomingCount = 0;
+  
+  enriched.forEach(item => {
+    // Only calculate stats for policies matches target year
+    const yearMatch = targetYear === 'all' || (item.expDate.getFullYear() === Number(targetYear));
+    if (!yearMatch) return;
+    
+    if (item.daysLeft >= 0) {
+      totalPremium += Number(item.amount) || 0;
+      activePremiumCount++;
+    }
+    
+    if (item.daysLeft < 0) {
+      expiredCount++;
+    } else if (item.daysLeft <= 3) {
+      urgentCount++;
+    } else if (item.daysLeft <= 7) {
+      incomingCount++;
+    }
+  });
+  
+  // Update Stats UI
+  document.getElementById('premiumValue').textContent = formatCurrency(totalPremium);
+  document.getElementById('premiumCount').textContent = `${activePremiumCount} Active Policies`;
+  document.getElementById('expiredCount').textContent = expiredCount;
+  document.getElementById('urgentCount').textContent = urgentCount;
+  document.getElementById('incomingCount').textContent = incomingCount;
+
+  // Perform filtering on dataset
+  filteredData = enriched.filter(item => {
+    // Year filter check
+    const yearMatch = targetYear === 'all' || (item.expDate.getFullYear() === Number(targetYear));
+    if (!yearMatch) return false;
+    
+    // Month filter check (based on end date)
+    const monthMatch = selectedMonth === 'all' || (item.expDate.getMonth() === Number(selectedMonth));
+    if (!monthMatch) return false;
+    
+    // Search query check
+    let queryMatch = true;
+    if (query) {
+      queryMatch = item.name.includes(query) || 
+                   item.vehicle.includes(query) || 
+                   item.plate.includes(query) || 
+                   item.insurance.includes(query) ||
+                   (item.policy_no && item.policy_no.includes(query));
+    }
+    if (!queryMatch) return false;
+    
+    // Status Filter Check
+    const bucket = getDaysBucket(item.daysLeft);
+    const isSent = sentSet.has(item.originalIdx);
+    
+    if (activeStatusFilter === 'all') return true;
+    if (activeStatusFilter === 'expired') return bucket === 'expired';
+    if (activeStatusFilter === 'today') return bucket === 'today';
+    if (activeStatusFilter === '3') return bucket === 'today' || bucket === 'days1' || bucket === 'days3';
+    if (activeStatusFilter === '7') return ['today','days1','days3','days7'].includes(bucket);
+    if (activeStatusFilter === 'unsent') return item.daysLeft <= 7 && !isSent;
+    
+    return true;
+  });
+
+  renderTable(sentSet);
+  updateSelectedCount();
+  
+  // Real-time charts refresh hook
+  if (currentView === 'analytics') {
+    renderAnalyticsCharts();
+  }
+}
+
+function renderTable(sentSet) {
+  const tbody = document.getElementById('registerTableBody');
+  const empty = document.getElementById('emptyRegisterState');
+  
+  tbody.innerHTML = '';
+  
+  if (filteredData.length === 0) {
+    empty.style.display = 'block';
+    return;
+  }
+  
+  empty.style.display = 'none';
+  
+  filteredData.forEach((item, index) => {
+    const bucket = getDaysBucket(item.daysLeft);
+    const label = formatDaysLabel(item.daysLeft);
+    const isSent = sentSet.has(item.originalIdx);
+    
+    // Detect data warnings
+    let integrityHelp = '';
+    if (!item.phone || item.phone.length < 8) {
+      integrityHelp += `<span class="integrity-alert"><i class="fa-solid fa-triangle-exclamation"></i> No Phone</span>`;
+    }
+    if (!item.policy_no) {
+      integrityHelp += `<span class="integrity-alert" style="color:var(--text-muted);"><i class="fa-solid fa-circle-question"></i> No Policy No</span>`;
+    }
+    
+    const waUrl = buildWhatsAppLink(item);
+    
+    const btnWa = isSent 
+      ? `<a href="${waUrl}" target="_blank" class="btn-wa-action sent" onclick="markAsSent(${item.originalIdx})"><i class="fa-solid fa-circle-check"></i> Resend</a>`
+      : `<a href="${waUrl}" target="_blank" class="btn-wa-action" onclick="markAsSent(${item.originalIdx})"><i class="fa-brands fa-whatsapp"></i> Send</a>`;
+      
+    // Style provider tag class
+    const insClass = item.insurance.toLowerCase().replace(/\s+/g, '');
+    
+    // Document Button Builders
+    let policyBtn = '';
+    if (item.policy_doc) {
+      const isLocalMissing = item.policy_doc.localOnly && !item.policy_doc.data;
+      if (isLocalMissing) {
+        policyBtn = `<button class="btn-doc local-missing" onclick="downloadDoc(${item.originalIdx}, 'policy')" title="Policy PDF stored locally on uploading device only (not synced to cloud)"><i class="fa-solid fa-shield-halved"></i></button>`;
+      } else {
+        policyBtn = `<button class="btn-doc active-pdf" onclick="downloadDoc(${item.originalIdx}, 'policy')" title="Download Policy PDF: ${item.policy_doc.name}"><i class="fa-solid fa-file-pdf"></i></button>`;
+      }
+    } else {
+      policyBtn = `<button class="btn-doc empty-doc" onclick="openEditModal(${item.originalIdx})" title="No Policy PDF uploaded (Click to edit)"><i class="fa-regular fa-file"></i></button>`;
+    }
+
+    let kycBtn = '';
+    const hasKyc = (item.kyc_docs && item.kyc_docs.length > 0) || item.kyc_doc;
+    if (hasKyc) {
+      const kycCount = item.kyc_docs ? item.kyc_docs.length : 1;
+      const kycTitle = item.kyc_docs ? item.kyc_docs.map(d => d.name).join(', ') : item.kyc_doc.name;
+      
+      const kycList = item.kyc_docs ? item.kyc_docs : (item.kyc_doc ? [item.kyc_doc] : []);
+      const allLocalMissing = kycList.every(d => d.localOnly && !d.data);
+      const someLocalMissing = kycList.some(d => d.localOnly && !d.data);
+      
+      if (allLocalMissing) {
+        kycBtn = `<button class="btn-doc local-missing" onclick="downloadDoc(${item.originalIdx}, 'kyc')" title="KYC files stored locally on uploading device only (not synced to cloud)"><i class="fa-solid fa-shield-halved"></i><span style="font-size:8px;position:absolute;bottom:-2px;right:-2px;background:var(--orange);color:#fff;border-radius:50%;width:13px;height:13px;display:flex;align-items:center;justify-content:center;font-weight:bold;border:1px solid #161b22;">${kycCount}</span></button>`;
+      } else if (someLocalMissing) {
+        kycBtn = `<button class="btn-doc active-kyc" onclick="downloadDoc(${item.originalIdx}, 'kyc')" title="Download KYC Document(s) (Some files stored on uploading device only)"><i class="fa-solid fa-id-card"></i><span style="font-size:8px;position:absolute;bottom:-2px;right:-2px;background:var(--orange);color:#fff;border-radius:50%;width:13px;height:13px;display:flex;align-items:center;justify-content:center;font-weight:bold;border:1px solid #161b22;">${kycCount}</span></button>`;
+      } else {
+        kycBtn = `<button class="btn-doc active-kyc" onclick="downloadDoc(${item.originalIdx}, 'kyc')" title="Download KYC Document(s) (${kycCount} files): ${kycTitle}"><i class="fa-solid fa-id-card"></i><span style="font-size:8px;position:absolute;bottom:-2px;right:-2px;background:var(--purple);color:#fff;border-radius:50%;width:13px;height:13px;display:flex;align-items:center;justify-content:center;font-weight:bold;border:1px solid #161b22;">${kycCount}</span></button>`;
+      }
+    } else {
+      kycBtn = `<button class="btn-doc empty-doc" onclick="openEditModal(${item.originalIdx})" title="No KYC Document uploaded (Click to edit)"><i class="fa-regular fa-id-card"></i></button>`;
+    }
+
+    const tr = document.createElement('tr');
+    tr.id = `row-${item.originalIdx}`;
+    tr.innerHTML = `
+      <td style="padding-left:16px;"><input type="checkbox" class="custom-cb row-cb" data-index="${item.originalIdx}" onchange="updateSelectedCount()"></td>
+      <td style="font-family:'DM Mono',monospace;color:var(--text-muted);font-size:12px;">${index + 1}</td>
+      <td>
+        <div class="stack-cell">
+          <span class="stack-primary">${item.name}</span>
+          <span class="stack-secondary">${item.phone || 'NO PHONE'}</span>
+          ${integrityHelp}
+        </div>
+      </td>
+      <td>
+        <div class="stack-cell">
+          <span style="font-weight:600;color:var(--blue);">${item.vehicle}</span>
+          <div class="plate-container" style="margin-top:2px;">
+            <div class="plate-ind"><div class="chakra"></div>IND</div>
+            <div class="plate-num">${item.plate}</div>
+          </div>
+        </div>
+      </td>
+      <td>
+        <div class="stack-cell">
+          <div><span class="ins-badge ${insClass}">${item.insurance}</span></div>
+          <span class="stack-secondary">${item.policy_no || 'Pending...'}</span>
+        </div>
+      </td>
+      <td>
+        <div class="stack-cell" style="font-family:'DM Mono',monospace;font-size:12.5px;">
+          <span style="color:var(--text-muted)">Start: ${item.start_date ? formatDate(item.start_date) : 'N/A'}</span>
+          <span style="font-weight:600;">End: ${formatDate(item.end_date)}</span>
+        </div>
+      </td>
+      <td><span class="expiry-badge ${bucket}">${label}</span></td>
+      <td style="font-family:'DM Mono',monospace;font-weight:600;color:var(--accent);">${formatCurrency(item.amount)}</td>
+      <td class="remarks-cell" onclick="toggleRemarksExpand(this)">${item.notes || '—'}</td>
+      <td>
+        <div style="display:flex;gap:6px;justify-content:center;">
+          ${policyBtn}
+          ${kycBtn}
+        </div>
+      </td>
+      <td>
+        <div style="display:flex;gap:6px;">
+          ${btnWa}
+          <button class="btn btn-secondary" style="padding:6px 10px;" onclick="openEditModal(${item.originalIdx})"><i class="fa-regular fa-pen-to-square"></i></button>
+          <button class="btn btn-danger" style="padding:6px 10px;" onclick="deleteEntry(${item.originalIdx})"><i class="fa-regular fa-trash-can"></i></button>
+        </div>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function toggleRemarksExpand(el) {
+  el.classList.toggle('expanded');
+}
+
+// Bulk sender selection
+function toggleSelectAll(master) {
+  const checkboxes = document.querySelectorAll('.row-cb');
+  checkboxes.forEach(cb => {
+    cb.checked = master.checked;
+    const row = document.getElementById(`row-${cb.dataset.index}`);
+    if (row) {
+      if (master.checked) row.classList.add('selected');
+      else row.classList.remove('selected');
+    }
+  });
+  updateSelectedCount();
+}
+
+function updateSelectedCount() {
+  const checkboxes = document.querySelectorAll('.row-cb:checked');
+  const count = checkboxes.length;
+  document.getElementById('selectedCount').textContent = count;
+  document.getElementById('btnSendBulk').disabled = count === 0;
+  document.getElementById('btnDeleteSelected').disabled = count === 0;
+  
+  // highlight selected rows
+  document.querySelectorAll('.row-cb').forEach(cb => {
+    const row = document.getElementById(`row-${cb.dataset.index}`);
+    if (row) {
+      if (cb.checked) row.classList.add('selected');
+      else row.classList.remove('selected');
+    }
+  });
+}
+
+// ==============================================
+// MESSAGING & BULK DISPATCHER
+// ==============================================
+function buildWhatsAppLink(item) {
+  const template = localStorage.getItem('whatsapp_template');
+  const phone = item.phone.replace(/[^0-9]/g, '');
+  
+  const statusStr = item.daysLeft < 0 
+    ? `has already EXPIRED on ${formatDate(item.end_date)}`
+    : item.daysLeft === 0 
+    ? `expires TODAY!`
+    : item.daysLeft === 1 
+    ? `expires TOMORROW!`
+    : `will expire in ${item.daysLeft} days on ${formatDate(item.end_date)}`;
+
+  const msg = template
+    .replace(/{name}/g, item.name)
+    .replace(/{vehicle}/g, item.vehicle)
+    .replace(/{plate}/g, item.plate)
+    .replace(/{insurance}/g, item.insurance)
+    .replace(/{policy}/g, item.policy_no || 'N/A')
+    .replace(/{expiry}/g, formatDate(item.end_date))
+    .replace(/{days}/g, item.daysLeft)
+    .replace(/{remarks}/g, item.notes || 'None')
+    .replace(/{expiry_status}/g, statusStr);
+
+  return `https://web.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(msg)}`;
+}
+
+function markAsSent(originalIdx) {
+  const sentSet = new Set(JSON.parse(localStorage.getItem('waSent') || '[]'));
+  sentSet.add(originalIdx);
+  localStorage.setItem('waSent', JSON.stringify([...sentSet]));
+  
+  logActivity(`💬 WhatsApp opened for client: ${DATA[originalIdx].name}`, "info");
+  
+  // Quick timeout to update UI state
+  setTimeout(() => applyFiltersAndStats(), 1000);
+}
+
+// Bulk sender queue
+function triggerBulkSend() {
+  const checkboxes = document.querySelectorAll('.row-cb:checked');
+  if (checkboxes.length === 0) return;
+  
+  const targetIndices = Array.from(checkboxes).map(cb => Number(cb.dataset.index));
+  
+  if (confirm(`You have queued ${targetIndices.length} WhatsApp reminders. Because of browser security, we will open them in separate tabs. Please enable popups! Proceed?`)) {
+    let index = 0;
+    
+    function sendNext() {
+      if (index >= targetIndices.length) {
+        showToast(`Dispatched all ${targetIndices.length} reminders!`);
+        logActivity(`🚀 Bulk WhatsApp: Dispatched all ${targetIndices.length} reminders!`, "info");
+        document.getElementById('selectAllCheckbox').checked = false;
+        applyFiltersAndStats();
+        return;
+      }
+      
+      const origIdx = targetIndices[index];
+      const item = DATA[origIdx];
+      const link = buildWhatsAppLink(item);
+      
+      window.open(link, '_blank');
+      
+      const sentSet = new Set(JSON.parse(localStorage.getItem('waSent') || '[]'));
+      sentSet.add(origIdx);
+      localStorage.setItem('waSent', JSON.stringify([...sentSet]));
+      
+      index++;
+      setTimeout(sendNext, 2000); // 2 second delay to protect popup blockers
+    }
+    sendNext();
+  }
+}
+
+// ==============================================
+// EXCEL IMPORT & PARSING ENGINE
+// ==============================================
+function handleExcelFileSelect(input) {
+  const file = input.files[0];
+  if (!file) return;
+  parseExcelFile(file);
+}
+
+function parseExcelFile(file) {
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, { type: 'array' });
+      const sheetName = workbook.SheetNames[0];
+      const sheet = workbook.Sheets[sheetName];
+      const rawJson = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+      
+      if (rawJson.length === 0) {
+        showToast("Excel sheet has no rows of data!", true);
+        return;
+      }
+
+      // Read columns and prompt mapper
+      const mode = document.getElementById('importMode').value;
+      const importedRecords = [];
+
+      rawJson.forEach(row => {
+        const item = mapExcelRow(row);
+        if (item.name && item.phone) {
+          importedRecords.push(item);
+        }
+      });
+
+      if (importedRecords.length === 0) {
+        showToast("Could not find rows with valid client Name and Phone columns!", true);
+        return;
+      }
+
+      if (mode === 'overwrite') {
+        (async () => {
+          const isCloudEnabled = localStorage.getItem('MMC_FIREBASE_ENABLED') === "true";
+          if (isCloudEnabled && firebaseInitialized) {
+            showToast("☁️ Clearing Cloud database for overwrite...");
+            await clearCloudDatabase();
+          }
+          DATA = [...importedRecords];
+          saveAllToIndexedDB(true, true);
+          closeModal('importModal');
+          applyFiltersAndStats();
+          showToast(`Successfully imported ${importedRecords.length} policies from Excel!`);
+          logActivity(`📥 Imported file: "${file.name}" with ${importedRecords.length} active rows`, "info");
+        })();
+      } else {
+        // Append mode
+        importedRecords.forEach(item => {
+          item._isNew = true;
+        });
+        DATA = [...DATA, ...importedRecords];
+        saveAllToIndexedDB(true, false);
+        closeModal('importModal');
+        applyFiltersAndStats();
+        showToast(`Successfully imported ${importedRecords.length} policies from Excel!`);
+        logActivity(`📥 Imported file: "${file.name}" with ${importedRecords.length} active rows`, "info");
+      }
+      
+    } catch(err) {
+      showToast("Error parsing Excel file sheet! Check format.", true);
+      logActivity(`❌ Import error: ${err.message}`, "err");
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function mapExcelRow(row) {
+  const keys = Object.keys(row);
+  const findVal = (possibleHeaders) => {
+    const matchedKey = keys.find(k => {
+      const cleanKey = k.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+      return possibleHeaders.some(ph => cleanKey === ph);
+    });
+    return matchedKey ? row[matchedKey] : '';
+  };
+
+  const name = findVal(['name', 'clientname', 'customername', 'client']);
+  const vehicle = findVal(['vehicle', 'vehical', 'model', 'car', 'bike']);
+  const plate = findVal(['numberplate', 'plate', 'plateno', 'vehicleno', 'regno', 'numberplate']);
+  const insurance = findVal(['insurance', 'inscompany', 'provider', 'company']);
+  
+  let startDateRaw = findVal(['date', 'startdate', 'issuedate']);
+  let endDateRaw = findVal(['enddate', 'expirydate', 'expdate', 'duedate']);
+  
+  const policyNo = findVal(['policyno', 'policy', 'policynumber']);
+  const amount = findVal(['amount', 'premium', 'price', 'cost', 'premiumamount']);
+  const phone = findVal(['contactno', 'phone', 'mobile', 'contact', 'phoneno']);
+  const notes = findVal(['notes', 'remarks', 'remark', 'note', 'comment']);
+
+  const parseDate = (d) => {
+    if (!d) return '';
+    if (d instanceof Date) return d.toISOString().split('T')[0];
+    if (typeof d === 'number') {
+      const date = new Date((d - 25569) * 86400 * 1000);
+      return date.toISOString().split('T')[0];
+    }
+    const cleanStr = String(d).trim();
+    if (!cleanStr) return '';
+    
+    // Try to parse DD-MM-YYYY
+    const dmyMatch = cleanStr.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/);
+    if (dmyMatch) {
+      const day = dmyMatch[1].padStart(2, '0');
+      const month = dmyMatch[2].padStart(2, '0');
+      const year = dmyMatch[3];
+      return `${year}-${month}-${day}`;
+    }
+    
+    const parsed = new Date(cleanStr);
+    if (!isNaN(parsed.getTime())) {
+      return parsed.toISOString().split('T')[0];
+    }
+    return cleanStr;
+  };
+
+  return {
+    id: generateUniqueId(),
+    name: String(name).trim(),
+    vehicle: String(vehicle).trim(),
+    plate: formatPlateNumber(plate),
+    insurance: String(insurance).trim(),
+    start_date: parseDate(startDateRaw),
+    end_date: parseDate(endDateRaw),
+    policy_no: String(policyNo).trim(),
+    amount: amount ? Number(amount) : '',
+    phone: cleanAndFormatPhone(phone),
+    notes: String(notes).trim()
+  };
+}
+
+// Drag & drop handlers
+const dropZone = document.getElementById('excelDropZone');
+if (dropZone) {
+  dropZone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropZone.classList.add('dragover');
+  });
+  dropZone.addEventListener('dragleave', () => {
+    dropZone.classList.remove('dragover');
+  });
+  dropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropZone.classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (file) parseExcelFile(file);
+  });
+  dropZone.addEventListener('click', () => {
+    document.getElementById('excelFileInput').click();
+  });
+}
+
+// ==============================================
+// EXPORT & LEDGER BACKUP
+// ==============================================
+function exportExcel() {
+  if (DATA.length === 0) {
+    showToast("No data in the ledger to export!", true);
+    return;
+  }
+  
+  try {
+    // Format rows for Excel export
+    const excelRows = DATA.map((item, index) => ({
+      "SR NO.": index + 1,
+      "NAME": item.name,
+      "VEHICAL": item.vehicle,
+      "NUMBER PLATE": item.plate,
+      "INSURANCE": item.insurance,
+      "POLICY NO.": item.policy_no || '—',
+      "START DATE": item.start_date || '—',
+      "END DATE": item.end_date,
+      "PREMIUM AMOUNT": item.amount || 0,
+      "CONTACT NO.": item.phone,
+      "REMARKS": item.notes || '—'
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(excelRows);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Insurance Register");
+    
+    // Save file
+    const targetYear = document.getElementById('targetYearFilter').value;
+    const filename = `Insurance_Register_Ledger_${targetYear !== 'all' ? targetYear : 'All'}.xlsx`;
+    XLSX.writeFile(workbook, filename);
+    
+    showToast("Excel spreadsheet downloaded successfully!");
+    logActivity(`📤 Exported Excel spreadsheet: "${filename}"`, "info");
+  } catch(err) {
+    showToast("Failed to compile Excel file!", true);
+  }
+}
+
+// JSON ledger backup
+function downloadJSONBackup() {
+  try {
+    const blob = new Blob([JSON.stringify(DATA, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const dlAnchorElem = document.createElement('a');
+    dlAnchorElem.setAttribute("href", url);
+    dlAnchorElem.setAttribute("download", `LedgerBook_Backup_${new Date().toISOString().split('T')[0]}.json`);
+    dlAnchorElem.click();
+    URL.revokeObjectURL(url);
+    showToast("Backup JSON file generated!");
+    logActivity("💾 Exported full JSON database register backup", "info");
+  } catch(err) {
+    showToast("JSON export failed!", true);
+  }
+}
+
+// JSON ledger restore/import
+function triggerJSONBackupSelect() {
+  document.getElementById('jsonBackupInput').click();
+}
+
+function handleJSONBackupSelect(input) {
+  const file = input.files[0];
+  if (!file) return;
+  
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const parsed = JSON.parse(e.target.result);
+      if (!Array.isArray(parsed)) {
+        showToast("Invalid backup file! Must be a list of records.", true);
+        return;
+      }
+      
+      const isValid = parsed.length === 0 || parsed.every(item => item && typeof item === 'object' && ('name' in item) && ('vehicle' in item));
+      if (!isValid) {
+        showToast("Incorrect ledger backup structure!", true);
+        return;
+      }
+      
+      if (confirm(`You are importing a backup with ${parsed.length} policies. Would you like to OVERWRITE your current database?\n\n(Click 'OK' to OVERWRITE entirely, or click 'Cancel' to MERGE/APPEND records to your current list).`)) {
+        // Overwrite
+        (async () => {
+          const isCloudEnabled = localStorage.getItem('MMC_FIREBASE_ENABLED') === "true";
+          if (isCloudEnabled && firebaseInitialized) {
+            showToast("☁️ Clearing Cloud database for overwrite...");
+            await clearCloudDatabase();
+          }
+          DATA = parsed;
+          saveAllToIndexedDB(true, true);
+          logActivity(`💾 Restored: Overwrote ledger with ${parsed.length} client files from backup.`, "info");
+          showToast(`Database restored with ${parsed.length} records.`);
+          setTimeout(() => applyFiltersAndStats(), 200);
+        })();
+      } else {
+        // Merge/Append
+        const initialLength = DATA.length;
+        parsed.forEach(newItem => {
+          const exists = DATA.some(oldItem => 
+            oldItem.name === newItem.name && 
+            oldItem.plate === newItem.plate && 
+            oldItem.end_date === newItem.end_date
+          );
+          if (!exists) {
+            delete newItem.id;
+            newItem._isNew = true; // Mark as new for cloud sync
+            DATA.push(newItem);
+          }
+        });
+        saveAllToIndexedDB(true, false);
+        const addedCount = DATA.length - initialLength;
+        logActivity(`💾 Merged: Appended ${addedCount} new client files from backup.`, "info");
+        showToast(`Merged: Added ${addedCount} records.`);
+        setTimeout(() => applyFiltersAndStats(), 200);
+      }
+      input.value = '';
+    } catch(err) {
+      showToast("Failed to parse JSON backup file!", true);
+      logActivity(`❌ Restore error: ${err.message}`, "err");
+    }
+  };
+  reader.readAsText(file);
+}
+
+// ==============================================
+// MESSAGE TEMPLATING SYSTEM
+// ==============================================
+function openTemplateModal() {
+  document.getElementById('messageTemplateInput').value = localStorage.getItem('whatsapp_template');
+  updateTemplatePreview();
+  openModal('templateModal');
+}
+
+function updateTemplatePreview() {
+  const template = document.getElementById('messageTemplateInput').value;
+  const mockItem = {
+    name: "BHARATBHAI NAGARBHAI PATEL",
+    vehicle: "SPLENDER",
+    plate: "GJ13SS2914",
+    insurance: "NEW INDIA",
+    policy_no: "21250131240100002621",
+    end_date: "2026-01-01",
+    daysLeft: 3,
+    notes: "Awaiting client response"
+  };
+  
+  const statusStr = `will expire in 3 days on ${formatDate(mockItem.end_date)}`;
+
+  const preview = template
+    .replace(/{name}/g, mockItem.name)
+    .replace(/{vehicle}/g, mockItem.vehicle)
+    .replace(/{plate}/g, mockItem.plate)
+    .replace(/{insurance}/g, mockItem.insurance)
+    .replace(/{policy}/g, mockItem.policy_no)
+    .replace(/{expiry}/g, formatDate(mockItem.end_date))
+    .replace(/{days}/g, mockItem.daysLeft)
+    .replace(/{remarks}/g, mockItem.notes)
+    .replace(/{expiry_status}/g, statusStr);
+
+  document.getElementById('templatePreviewBlock').textContent = preview;
+}
+
+function saveMessageTemplate() {
+  const template = document.getElementById('messageTemplateInput').value;
+  localStorage.setItem('whatsapp_template', template);
+  closeModal('templateModal');
+  showToast("WhatsApp message template saved successfully!");
+  logActivity("💬 Custom WhatsApp reminder message template updated.", "info");
+}
+
+function wipeEntireRegister() {
+  if (confirm("🚨 WARNING: This will permanently DELETE ALL RECORDS in your ledger book! Are you absolutely sure you want to proceed? This cannot be undone!")) {
+    const transaction = dbInstance.transaction([STORE_NAME], 'readwrite');
+    const store = transaction.objectStore(STORE_NAME);
+    const req = store.clear();
+    req.onsuccess = async function() {
+      // Clear localStorage backups
+      localStorage.removeItem('insurance_ledger_backup');
+      
+      // Clear Firestore
+      const isCloudEnabled = localStorage.getItem('MMC_FIREBASE_ENABLED') === "true";
+      if (isCloudEnabled && firebaseInitialized) {
+        showToast("🗑️ Wiping Cloud Sync Database...");
+        await clearCloudDatabase();
+      }
+      
+      DATA = [];
+      applyFiltersAndStats();
+      showToast("Ledger register wiped successfully!", true);
+      logActivity("🗑️ Wiped entire register ledger of all client policies.", "err");
+    };
+    req.onerror = function() {
+      showToast("Failed to wipe local database!", true);
+    };
+  }
+}
+
+// ==============================================
+// MODAL OVERLAY UTILITIES
+// ==============================================
+function openModal(id) {
+  document.getElementById(id).classList.add('active');
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('active');
+}
+
+// Mobile Responsive navigation toggles
+function toggleSidebarDrawer() {
+  const sidebar = document.getElementById('appSidebar');
+  const overlay = document.getElementById('sidebarOverlay');
+  if (sidebar && overlay) {
+    sidebar.classList.toggle('active');
+    overlay.classList.toggle('active');
+  }
+}
+
+function toggleMobileActionsDropdown() {
+  const dropdown = document.getElementById('mobileActionsDropdown');
+  if (dropdown) {
+    dropdown.classList.toggle('active');
+  }
+}
+
+function closeAllDropdowns() {
+  const sidebar = document.getElementById('appSidebar');
+  const overlay = document.getElementById('sidebarOverlay');
+  const dropdown = document.getElementById('mobileActionsDropdown');
+  
+  if (sidebar) sidebar.classList.remove('active');
+  if (overlay) overlay.classList.remove('active');
+  if (dropdown) dropdown.classList.remove('active');
+}
+
+// Global click outside handlers
+window.addEventListener('click', (e) => {
+  if (e.target.classList.contains('modal-overlay')) {
+    e.target.classList.remove('active');
+  }
+  
+  // Mobile actions click outside check
+  const wrapper = document.querySelector('.mobile-actions-wrapper');
+  if (wrapper && !wrapper.contains(e.target)) {
+    const dropdown = document.getElementById('mobileActionsDropdown');
+    if (dropdown) dropdown.classList.remove('active');
+  }
+});
+
+
+
+// Security API Settings Modal controls
+function openSecuritySettingsModal() {
+  // Load Firebase Config
+  const fbEnabled = localStorage.getItem('MMC_FIREBASE_ENABLED') === "true";
+  document.getElementById('settingsFirebaseEnabled').checked = fbEnabled;
+  toggleFirebaseInputs(fbEnabled);
+  
+  document.getElementById('settingsFirebaseApiKey').value = localStorage.getItem('MMC_FIREBASE_API_KEY') || '';
+  document.getElementById('settingsFirebaseProjectId').value = localStorage.getItem('MMC_FIREBASE_PROJECT_ID') || '';
+  document.getElementById('settingsFirebaseAuthDomain').value = localStorage.getItem('MMC_FIREBASE_AUTH_DOMAIN') || '';
+  document.getElementById('settingsFirebaseStorageBucket').value = localStorage.getItem('MMC_FIREBASE_STORAGE_BUCKET') || '';
+  document.getElementById('settingsFirebaseSenderId').value = localStorage.getItem('MMC_FIREBASE_SENDER_ID') || '';
+  document.getElementById('settingsFirebaseAppId').value = localStorage.getItem('MMC_FIREBASE_APP_ID') || '';
+  
+  // Load Google Drive Config
+  const gdEnabled = localStorage.getItem('MMC_GDRIVE_ENABLED') === "true";
+  document.getElementById('settingsGoogleDriveEnabled').checked = gdEnabled;
+  toggleGoogleDriveInputs(gdEnabled);
+  
+  document.getElementById('settingsGoogleDriveWebAppUrl').value = localStorage.getItem('MMC_GDRIVE_WEBAPP_URL') || '';
+  document.getElementById('settingsGoogleDriveFolderId').value = localStorage.getItem('MMC_GDRIVE_FOLDER_ID') || '';
+  
+  openModal('securitySettingsModal');
+}
+
+function saveSecuritySettings() {
+  // Save Firebase configuration
+  const fbEnabled = document.getElementById('settingsFirebaseEnabled').checked;
+  localStorage.setItem('MMC_FIREBASE_ENABLED', fbEnabled ? "true" : "false");
+  localStorage.setItem('MMC_FIREBASE_API_KEY', document.getElementById('settingsFirebaseApiKey').value.trim());
+  localStorage.setItem('MMC_FIREBASE_PROJECT_ID', document.getElementById('settingsFirebaseProjectId').value.trim());
+  localStorage.setItem('MMC_FIREBASE_AUTH_DOMAIN', document.getElementById('settingsFirebaseAuthDomain').value.trim());
+  localStorage.setItem('MMC_FIREBASE_STORAGE_BUCKET', document.getElementById('settingsFirebaseStorageBucket').value.trim());
+  localStorage.setItem('MMC_FIREBASE_SENDER_ID', document.getElementById('settingsFirebaseSenderId').value.trim());
+  localStorage.setItem('MMC_FIREBASE_APP_ID', document.getElementById('settingsFirebaseAppId').value.trim());
+  
+  // Save Google Drive configuration
+  const gdEnabled = document.getElementById('settingsGoogleDriveEnabled').checked;
+  localStorage.setItem('MMC_GDRIVE_ENABLED', gdEnabled ? "true" : "false");
+  localStorage.setItem('MMC_GDRIVE_WEBAPP_URL', document.getElementById('settingsGoogleDriveWebAppUrl').value.trim());
+  localStorage.setItem('MMC_GDRIVE_FOLDER_ID', document.getElementById('settingsGoogleDriveFolderId').value.trim());
+  
+  // Re-initialize Firebase if enabled
+  if (fbEnabled) {
+    initFirebase();
+  }
+  
+  closeModal('securitySettingsModal');
+  showToast("Security and Storage settings saved successfully!");
+  logActivity("⚙️ Settings updated.", "info");
+}
+
+// ==============================================
+// GOOGLE FIREBASE CLOUD SYNC CONTROLLER
+// ==============================================
+const DEMO_FIREBASE_CONFIG = {
+  apiKey: "AIzaSyAPxNVrkK3_KCpYgpsuzsFSPPJXtJ38kkc",
+  authDomain: "gic-register-ab710.firebaseapp.com",
+  projectId: "gic-register-ab710",
+  storageBucket: "gic-register-ab710.firebasestorage.app",
+  messagingSenderId: "324066542731",
+  appId: "1:324066542731:web:b8aedbe4b02a079e93808e"
+};
+
+let firebaseInitialized = false;
+let dbCloud = null;
+let storageCloud = null;
+
+function initFirebase() {
+  const isCloudEnabled = localStorage.getItem('MMC_FIREBASE_ENABLED') === "true";
+  if (!isCloudEnabled) return false;
+  
+  const apiKey = localStorage.getItem('MMC_FIREBASE_API_KEY') || DEMO_FIREBASE_CONFIG.apiKey;
+  const projectId = localStorage.getItem('MMC_FIREBASE_PROJECT_ID') || DEMO_FIREBASE_CONFIG.projectId;
+  const authDomain = localStorage.getItem('MMC_FIREBASE_AUTH_DOMAIN') || DEMO_FIREBASE_CONFIG.authDomain;
+  const storageBucket = localStorage.getItem('MMC_FIREBASE_STORAGE_BUCKET') || DEMO_FIREBASE_CONFIG.storageBucket;
+  const messagingSenderId = localStorage.getItem('MMC_FIREBASE_SENDER_ID') || DEMO_FIREBASE_CONFIG.messagingSenderId;
+  const appId = localStorage.getItem('MMC_FIREBASE_APP_ID') || DEMO_FIREBASE_CONFIG.appId;
+  
+  const config = { apiKey, authDomain, projectId, storageBucket, messagingSenderId, appId };
+  
+  try {
+    if (firebase.apps.length === 0) {
+      firebase.initializeApp(config);
+    }
+    dbCloud = firebase.firestore();
+    storageCloud = firebase.storage();
+    firebaseInitialized = true;
+    logActivity("☁️ Google Firebase Cloud Sync initialized successfully.", "info");
+    return true;
+  } catch(e) {
+    console.error("Firebase Init Error:", e);
+    logActivity("❌ Firebase connection failed! Offline local mode active.", "err");
+    firebaseInitialized = false;
+    return false;
+  }
+}
+
+function toggleFirebaseInputs(enabled) {
+  const fields = document.getElementById('firebaseConfigFields');
+  if (fields) {
+    fields.style.display = enabled ? 'block' : 'none';
+  }
+  const syncBtn = document.getElementById('btnSyncLocalToCloud');
+  if (syncBtn) {
+    syncBtn.style.display = enabled ? 'inline-block' : 'none';
+  }
+}
+
+function toggleGoogleDriveInputs(enabled) {
+  const fields = document.getElementById('googleDriveFields');
+  if (fields) {
+    fields.style.display = enabled ? 'block' : 'none';
+  }
+}
+
+async function testFirebaseCloudConnection() {
+  const apiKey = document.getElementById('settingsFirebaseApiKey').value.trim() || DEMO_FIREBASE_CONFIG.apiKey;
+  const projectId = document.getElementById('settingsFirebaseProjectId').value.trim() || DEMO_FIREBASE_CONFIG.projectId;
+  const authDomain = document.getElementById('settingsFirebaseAuthDomain').value.trim() || DEMO_FIREBASE_CONFIG.authDomain;
+  const storageBucket = document.getElementById('settingsFirebaseStorageBucket').value.trim() || DEMO_FIREBASE_CONFIG.storageBucket;
+  const messagingSenderId = document.getElementById('settingsFirebaseSenderId').value.trim() || DEMO_FIREBASE_CONFIG.messagingSenderId;
+  const appId = document.getElementById('settingsFirebaseAppId').value.trim() || DEMO_FIREBASE_CONFIG.appId;
+  
+  const testConfig = { apiKey, authDomain, projectId, storageBucket, messagingSenderId, appId };
+  showToast("Testing Cloud Connection...");
+  
+  try {
+    const testAppName = "MMC_TEST_APP_" + Date.now();
+    const testApp = firebase.initializeApp(testConfig, testAppName);
+    const testDb = testApp.firestore();
+    
+    const testDocRef = testDb.collection("_connection_test").doc("ping");
+    await testDocRef.set({ timestamp: Date.now(), client: "Panghat Gift Shop" });
+    await testDocRef.delete();
+    await testApp.delete();
+    
+    showToast("✅ Firebase connection tested successfully! Ready for Cloud Sync.");
+    logActivity("☁️ Firebase test connection ping successful.", "info");
+  } catch(e) {
+    console.error("Firebase Test Connection Error:", e);
+    showToast("❌ Connection test failed! Please double check your keys.", true);
+  }
+}
+
+async function clearCloudDatabase() {
+  const isCloudEnabled = localStorage.getItem('MMC_FIREBASE_ENABLED') === "true";
+  if (!isCloudEnabled || !firebaseInitialized) return;
+  
+  try {
+    const querySnapshot = await dbCloud.collection("policies").get();
+    const batch = dbCloud.batch();
+    
+    for (const doc of querySnapshot.docs) {
+      const dbId = doc.id;
+      const data = doc.data();
+      
+      // Delete document
+      batch.delete(doc.ref);
+      
+      // Delete files from storage if we have storageCloud
+      if (storageCloud) {
+        if (data.policy_doc) {
+          storageCloud.ref().child(`policies/${dbId}/policy_doc`).delete().catch(()=>{});
+        }
+        if (Array.isArray(data.kyc_docs)) {
+          data.kyc_docs.forEach((docItem, dIdx) => {
+            storageCloud.ref().child(`policies/${dbId}/kyc_doc_${dIdx}`).delete().catch(()=>{});
+          });
+        }
+      }
+    }
+    
+    await batch.commit();
+    logActivity("☁️ Cloud registry database wiped completely.", "err");
+  } catch(err) {
+    console.error("Error clearing cloud database:", err);
+  }
+}
+
+async function uploadPolicyToFirebase(entry) {
+  if (!firebaseInitialized) return;
+  const docId = String(entry.id);
+  uploadingDocIds.add(docId);
+  try {
+    // Clone to avoid editing local state
+    const cloudEntry = { ...entry };
+    delete cloudEntry._synced;
+    const isGoogleDrive = localStorage.getItem('MMC_GDRIVE_ENABLED') === "true";
+    
+    // Upload Policy PDF
+    if (entry.policy_doc && entry.policy_doc.data && entry.policy_doc.data.startsWith('data:')) {
+      try {
+        if (isGoogleDrive) {
+          showToast("☁️ Uploading Policy PDF to Google Drive...");
+          const fileUrl = await uploadFileToGoogleDrive(entry.policy_doc);
+          cloudEntry.policy_doc = {
+            name: entry.policy_doc.name,
+            type: entry.policy_doc.type,
+            url: fileUrl
+          };
+        } else {
+          showToast("☁️ Uploading Policy PDF to Cloud Storage...");
+          const fileUrl = await uploadBase64ToStorage(`policies/${docId}/policy_doc`, entry.policy_doc);
+          cloudEntry.policy_doc = {
+            name: entry.policy_doc.name,
+            type: entry.policy_doc.type,
+            url: fileUrl
+          };
+        }
+      } catch(err) {
+        console.warn("Storage upload failed, handling fallback for Policy PDF:", err);
+        // If the file is small (under 300,000 chars base64, ~220KB), save inline to Firestore.
+        // Else, mark as localOnly to stay under 1MB Firestore limit.
+        if (entry.policy_doc.data.length < 300000) {
+          cloudEntry.policy_doc = entry.policy_doc;
+        } else {
+          cloudEntry.policy_doc = {
+            name: entry.policy_doc.name,
+            type: entry.policy_doc.type,
+            localOnly: true
+          };
+          showToast("⚠️ Policy PDF too large for free cloud sync; stored locally on this device.", true);
+        }
+      }
+    }
+    
+    // Upload KYC Documents
+    if (Array.isArray(entry.kyc_docs) && entry.kyc_docs.length > 0) {
+      try {
+        showToast("☁️ Uploading KYC Documents...");
+        const uploadedDocs = [];
+        for (let i = 0; i < entry.kyc_docs.length; i++) {
+          const doc = entry.kyc_docs[i];
+          if (doc.data && doc.data.startsWith('data:')) {
+            try {
+              let fileUrl = '';
+              if (isGoogleDrive) {
+                fileUrl = await uploadFileToGoogleDrive(doc);
+              } else {
+                fileUrl = await uploadBase64ToStorage(`policies/${docId}/kyc_doc_${i}`, doc);
+              }
+              uploadedDocs.push({
+                name: doc.name,
+                type: doc.type,
+                url: fileUrl
+              });
+            } catch(storageErr) {
+              console.warn(`Storage upload failed for KYC doc ${i}:`, storageErr);
+              if (doc.data.length < 300000) {
+                uploadedDocs.push(doc); // save small base64 directly
+              } else {
+                uploadedDocs.push({
+                  name: doc.name,
+                  type: doc.type,
+                  localOnly: true
+                });
+                showToast("⚠️ KYC document too large for free cloud sync; stored locally on this device.", true);
+              }
+            }
+          } else {
+            uploadedDocs.push(doc); // preserve existing (e.g. url or localOnly)
+          }
+        }
+        cloudEntry.kyc_docs = uploadedDocs;
+        cloudEntry.kyc_doc = uploadedDocs.length > 0 ? uploadedDocs[0] : null;
+      } catch(err) {
+        console.warn("Storage upload failed, using direct database fallback for KYC Documents:", err);
+        const fallbackDocs = [];
+        for (let i = 0; i < entry.kyc_docs.length; i++) {
+          const doc = entry.kyc_docs[i];
+          if (doc.data && doc.data.startsWith('data:')) {
+            if (doc.data.length < 300000) {
+              fallbackDocs.push(doc);
+            } else {
+              fallbackDocs.push({
+                name: doc.name,
+                type: doc.type,
+                localOnly: true
+              });
+            }
+          } else {
+            fallbackDocs.push(doc);
+          }
+        }
+        cloudEntry.kyc_docs = fallbackDocs;
+        cloudEntry.kyc_doc = fallbackDocs.length > 0 ? fallbackDocs[0] : null;
+      }
+    }
+    
+    await dbCloud.collection("policies").doc(docId).set(cloudEntry);
+    logActivity(`☁️ Cloud Synced: ${entry.name} saved to Firebase.`, "info");
+  } finally {
+    setTimeout(() => {
+      uploadingDocIds.delete(docId);
+    }, 1000);
+  }
+}
+
+async function uploadFileToGoogleDrive(doc) {
+  const webAppUrl = localStorage.getItem('MMC_GDRIVE_WEBAPP_URL');
+  const folderId = localStorage.getItem('MMC_GDRIVE_FOLDER_ID') || '';
+  
+  if (!webAppUrl) {
+    throw new Error("Google Apps Script Web App URL is not configured.");
+  }
+  
+  const payload = {
+    base64: doc.data,
+    mimeType: doc.type,
+    fileName: doc.name,
+    folderId: folderId
+  };
+  
+  const response = await fetch(webAppUrl, {
+    method: 'POST',
+    mode: 'cors',
+    headers: {
+      'Content-Type': 'text/plain;charset=utf-8'
+    },
+    body: JSON.stringify(payload)
+  });
+  
+  if (!response.ok) {
+    throw new Error(`Google Drive upload failed with status ${response.status}`);
+  }
+  
+  const result = await response.json();
+  if (!result.success) {
+    throw new Error(result.error || "Google Apps Script returned failure.");
+  }
+  
+  return result.fileUrl;
+}
+
+function uploadBase64ToStorage(path, doc) {
+  return new Promise((resolve, reject) => {
+    if (!storageCloud) {
+      reject(new Error("Firebase Storage is not initialized or active."));
+      return;
+    }
+    const storageRef = storageCloud.ref().child(path);
+    const parts = doc.data.split(',');
+    const base64Data = parts[1];
+    const mime = doc.type || 'application/octet-stream';
+    
+    const binary = atob(base64Data);
+    const array = [];
+    for (let i = 0; i < binary.length; i++) {
+      array.push(binary.charCodeAt(i));
+    }
+    const blob = new Blob([new Uint8Array(array)], { type: mime });
+    
+    const uploadTask = storageRef.put(blob);
+    uploadTask.on('state_changed', 
+      null, 
+      (error) => { reject(error); }, 
+      () => {
+        uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
+          resolve(downloadURL);
+        });
+      }
+    );
+  });
+}
+
+async function syncLocalToCloud() {
+  if (!DATA || DATA.length === 0) {
+    showToast("No local records to upload!", true);
+    return;
+  }
+  
+  const fbEnabled = document.getElementById('settingsFirebaseEnabled').checked;
+  if (!fbEnabled) {
+    showToast("Please enable Cloud Sync first!", true);
+    return;
+  }
+  
+  const apiKey = document.getElementById('settingsFirebaseApiKey').value.trim() || DEMO_FIREBASE_CONFIG.apiKey;
+  const projectId = document.getElementById('settingsFirebaseProjectId').value.trim() || DEMO_FIREBASE_CONFIG.projectId;
+  const authDomain = document.getElementById('settingsFirebaseAuthDomain').value.trim() || DEMO_FIREBASE_CONFIG.authDomain;
+  const storageBucket = document.getElementById('settingsFirebaseStorageBucket').value.trim() || DEMO_FIREBASE_CONFIG.storageBucket;
+  const messagingSenderId = document.getElementById('settingsFirebaseSenderId').value.trim() || DEMO_FIREBASE_CONFIG.messagingSenderId;
+  const appId = document.getElementById('settingsFirebaseAppId').value.trim() || DEMO_FIREBASE_CONFIG.appId;
+  
+  const config = { apiKey, authDomain, projectId, storageBucket, messagingSenderId, appId };
+  
+  try {
+    if (firebase.apps.length === 0 || !firebaseInitialized) {
+      firebase.initializeApp(config);
+      dbCloud = firebase.firestore();
+      storageCloud = firebase.storage();
+      firebaseInitialized = true;
+    }
+  } catch(e) {
+    showToast("❌ Could not connect to Cloud. Save credentials and try again.", true);
+    return;
+  }
+  
+  const btn = document.getElementById('btnSyncLocalToCloud');
+  const oldText = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Uploading...`;
+  
+  let successCount = 0;
+  showToast(`Starting upload of ${DATA.length} local records to Cloud...`);
+  
+  for (let i = 0; i < DATA.length; i++) {
+    try {
+      await uploadPolicyToFirebase(DATA[i]);
+      successCount++;
+    } catch(err) {
+      console.error(`Sync error on item ${i}:`, err);
+    }
+  }
+  
+  btn.disabled = false;
+  btn.innerHTML = oldText;
+  
+  showToast(`✅ Successfully uploaded ${successCount} of ${DATA.length} records!`);
+  logActivity(`☁️ Manual Bulk Sync: Uploaded ${successCount} records to Firebase Cloud database.`, "info");
+}
+
+function populateYearFilter() {
+  const select = document.getElementById('targetYearFilter');
+  if (!select) return;
+  
+  select.innerHTML = '';
+  
+  // All Years option
+  const optAll = document.createElement('option');
+  optAll.value = 'all';
+  optAll.textContent = 'All Years';
+  optAll.selected = true; // Select "All Years" by default!
+  select.appendChild(optAll);
+  
+  // Populate from 2026 to current year + 30 years dynamically!
+  const startYear = 2026;
+  const currentYear = new Date().getFullYear();
+  const endYear = Math.max(currentYear + 30, 2056);
+  
+  for (let year = startYear; year <= endYear; year++) {
+    const opt = document.createElement('option');
+    opt.value = String(year);
+    
+    // Leap year check
+    const isLeap = (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0);
+    opt.textContent = `${year} Fiscal${isLeap ? ' (Leap)' : ''}`;
+    select.appendChild(opt);
+  }
+}
+
+// Initialization
+document.addEventListener('DOMContentLoaded', () => {
+
+
+  populateYearFilter();
+  initDatabase();
+  updateSimulatedDate();
+
+  // Initialize Flatpickr for start/end date inputs in add/edit modals
+  try {
+    if (typeof flatpickr !== 'undefined') {
+      const fpConfig = {
+        dateFormat: "Y-m-d",
+        altInput: true,
+        altFormat: "d-m-Y",
+        allowInput: true,
+        disableMobile: true
+      };
+      flatpickr("#addStartDate", fpConfig);
+      flatpickr("#addEndDate", fpConfig);
+      flatpickr("#editStartDate", fpConfig);
+      flatpickr("#editEndDate", fpConfig);
+    } else {
+      console.warn("Flatpickr library is not loaded. Falling back to native date inputs.");
+    }
+  } catch (err) {
+    console.error("Flatpickr initialization failed:", err);
+  }
+  
+  // Pre-load and enable private Firebase Cloud Sync silently on first run or if never initialized
+  const fbEnabled = localStorage.getItem('MMC_FIREBASE_ENABLED');
+  if (fbEnabled === null || fbEnabled === undefined || !localStorage.getItem('MMC_FIREBASE_PROJECT_ID')) {
+    localStorage.setItem('MMC_FIREBASE_ENABLED', 'true'); // Auto-enable Cloud Sync!
+    localStorage.setItem('MMC_FIREBASE_API_KEY', 'AIzaSyAPxNVrkK3_KCpYgpsuzsFSPPJXtJ38kkc');
+    localStorage.setItem('MMC_FIREBASE_PROJECT_ID', 'gic-register-ab710');
+    localStorage.setItem('MMC_FIREBASE_AUTH_DOMAIN', 'gic-register-ab710.firebaseapp.com');
+    localStorage.setItem('MMC_FIREBASE_STORAGE_BUCKET', 'gic-register-ab710.firebasestorage.app');
+    localStorage.setItem('MMC_FIREBASE_SENDER_ID', '324066542731');
+    localStorage.setItem('MMC_FIREBASE_APP_ID', '1:324066542731:web:b8aedbe4b02a079e93808e');
+  }
+  
+  // Force upgrade/correction of old default database keys in local storage
+  if (localStorage.getItem('MMC_FIREBASE_PROJECT_ID') === 'midas-money-care-insurance-reg' || 
+      localStorage.getItem('MMC_FIREBASE_API_KEY') === 'AIzaSyCszSmi11-Nbj76U9dJEYDezbJayK2btko') {
+    localStorage.setItem('MMC_FIREBASE_ENABLED', 'true');
+    localStorage.setItem('MMC_FIREBASE_API_KEY', 'AIzaSyAPxNVrkK3_KCpYgpsuzsFSPPJXtJ38kkc');
+    localStorage.setItem('MMC_FIREBASE_PROJECT_ID', 'gic-register-ab710');
+    localStorage.setItem('MMC_FIREBASE_AUTH_DOMAIN', 'gic-register-ab710.firebaseapp.com');
+    localStorage.setItem('MMC_FIREBASE_STORAGE_BUCKET', 'gic-register-ab710.firebasestorage.app');
+    localStorage.setItem('MMC_FIREBASE_SENDER_ID', '324066542731');
+    localStorage.setItem('MMC_FIREBASE_APP_ID', '1:324066542731:web:b8aedbe4b02a079e93808e');
+  }
+  
+  setTimeout(() => {
+    initFirebase();
+  }, 800);
+});
+</script>
+<!-- Hidden restore ledger backup selector -->
+<input type="file" id="jsonBackupInput" accept=".json" style="display:none;" onchange="handleJSONBackupSelect(this)">
+
+</body>
+</html>
