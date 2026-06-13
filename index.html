@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Panghat Gift Shop - Expiry Register</title>
 <!-- Google Fonts -->
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <!-- FontAwesome Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <!-- SheetJS Library for Excel Import/Export -->
@@ -307,17 +307,17 @@
   }
   .search-bar {
     width: 100%;
-    background: #ffffff;
+    background: rgba(15, 23, 42, 0.4);
     border: 1px solid var(--border);
     border-radius: 8px;
     padding: 10px 14px 10px 40px;
     color: var(--text);
-    font-family: 'DM Sans', sans-serif;
+    font-family: 'Outfit', sans-serif;
     font-size: 14px;
     outline: none;
     transition: var(--transition);
   }
-  .search-bar:focus { border-color: var(--accent); box-shadow: 0 0 10px var(--accent-glow); }
+  .search-bar:focus { border-color: var(--accent); box-shadow: 0 0 10px var(--accent-glow); background: rgba(15, 23, 42, 0.6); }
 
   /* Advanced Filter Selectors */
   .filter-bar {
@@ -328,12 +328,12 @@
   }
 
   .select-pill {
-    background: #ffffff;
+    background: rgba(15, 23, 42, 0.4);
     border: 1px solid var(--border);
     border-radius: 8px;
     color: var(--text);
     padding: 8px 12px;
-    font-family: 'DM Sans', sans-serif;
+    font-family: 'Outfit', sans-serif;
     font-size: 13px;
     font-weight: 500;
     outline: none;
@@ -341,13 +341,13 @@
     transition: var(--transition);
   }
   .select-pill:hover, .select-pill:focus { border-color: var(--accent); }
-  .select-pill option { background: var(--bg); color: var(--text); }
+  .select-pill option { background: #0f172a; color: var(--text); }
 
   /* Dynamic Custom Filter tabs */
   .filter-tabs {
     display: flex;
     gap: 4px;
-    background: #ffffff;
+    background: rgba(15, 23, 42, 0.4);
     border: 1px solid var(--border);
     border-radius: 8px;
     padding: 4px;
@@ -358,7 +358,7 @@
     padding: 6px 12px;
     border-radius: 6px;
     border: none;
-    font-family: 'DM Sans', sans-serif;
+    font-family: 'Outfit', sans-serif;
     font-size: 12.5px;
     font-weight: 500;
     cursor: pointer;
@@ -384,7 +384,7 @@
     padding: 9px 16px;
     border-radius: 8px;
     border: 1px solid transparent;
-    font-family: 'DM Sans', sans-serif;
+    font-family: 'Outfit', sans-serif;
     font-size: 13px;
     font-weight: 600;
     cursor: pointer;
@@ -394,10 +394,10 @@
   .btn i { font-size: 14px; }
   
   .btn-primary { background: var(--accent); color: var(--text-dark); }
-  .btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25); }
+  .btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); box-shadow: 0 4px 12px var(--accent-glow); }
   
-  .btn-secondary { background: #ffffff; border-color: var(--border); color: var(--text); }
-  .btn-secondary:hover { background: rgba(0, 0, 0, 0.04); border-color: var(--text-muted); }
+  .btn-secondary { background: rgba(255, 255, 255, 0.05); border-color: var(--border); color: var(--text); }
+  .btn-secondary:hover { background: rgba(255, 255, 255, 0.1); border-color: var(--text-muted); }
 
   .btn-danger { background: var(--red-dim); border-color: var(--red); color: var(--red); }
   .btn-danger:hover { background: var(--red); color: #fff; transform: translateY(-1px); }
@@ -705,7 +705,7 @@
   .modal-overlay.active { opacity: 1; pointer-events: all; }
 
   .modal {
-    background: #ffffff;
+    background: var(--bg);
     border: 1px solid var(--border);
     border-radius: var(--radius);
     width: 90%;
@@ -778,12 +778,12 @@
   .form-input {
     width: 100%;
     box-sizing: border-box;
-    background: #ffffff;
+    background: rgba(15, 23, 42, 0.4);
     border: 1px solid var(--border);
     border-radius: 6px;
     padding: 9px 12px;
     color: var(--text);
-    font-family: 'DM Sans', sans-serif;
+    font-family: 'Outfit', sans-serif;
     font-size: 13.5px;
     outline: none;
     transition: var(--transition);
@@ -800,7 +800,7 @@
     border: 1px solid var(--card-border) !important;
     box-shadow: var(--shadow) !important;
     border-radius: var(--radius) !important;
-    font-family: 'DM Sans', sans-serif !important;
+    font-family: 'Outfit', sans-serif !important;
     color: var(--text) !important;
   }
   .flatpickr-months .flatpickr-month,
@@ -870,7 +870,7 @@
     align-items: center;
     gap: 12px;
   }
-  .drop-zone:hover, .drop-zone.dragover { border-color: var(--accent); background: rgba(2, 132, 199, 0.04); }
+  .drop-zone:hover, .drop-zone.dragover { border-color: var(--accent); background: var(--accent-glow); }
   .drop-zone i { font-size: 32px; color: var(--text-muted); }
   .drop-zone span { font-size: 13.5px; font-weight: 500; }
   .drop-zone p { font-size: 11px; color: var(--text-muted); }
@@ -880,7 +880,7 @@
     position: fixed;
     bottom: 24px;
     right: 24px;
-    background: #ffffff;
+    background: #1e293b;
     border: 1px solid var(--accent);
     color: var(--text);
     padding: 12px 20px;
@@ -901,10 +901,10 @@
 
   /* WhatsApp Template Live Preview Block */
   .template-preview {
-    background: #e2e8f0;
+    background: rgba(15, 23, 42, 0.6);
     border-radius: 8px;
     padding: 14px;
-    color: #1e293b;
+    color: var(--text);
     font-family: sans-serif;
     font-size: 13px;
     white-space: pre-wrap;
@@ -917,8 +917,7 @@
   .security-overlay {
     position: fixed;
     top: 0; left: 0; width: 100vw; height: 100vh;
-    background: radial-gradient(circle at 0% 0%, #f0f4f8 0%, #f4f7fa 50%), 
-                radial-gradient(circle at 100% 100%, #e0ebf6 0%, #f4f7fa 50%);
+    background: radial-gradient(circle at 0% 0%, #0f172a 0%, #020617 100%);
     z-index: 10000;
     display: flex;
     align-items: center;
@@ -928,13 +927,13 @@
   }
   
   .security-card {
-    background: #ffffff;
+    background: var(--card-bg);
     border: 1px solid var(--border);
     border-radius: var(--radius);
     padding: 32px;
     width: 90%;
     max-width: 440px;
-    box-shadow: 0 20px 50px rgba(148, 163, 184, 0.18);
+    box-shadow: var(--shadow);
     display: flex;
     flex-direction: column;
     gap: 20px;
@@ -971,13 +970,13 @@
     font-family: 'DM Mono', monospace;
     outline: none;
     color: var(--accent);
-    background: #f8fafc;
+    background: rgba(15, 23, 42, 0.4);
     transition: var(--transition);
   }
   
   .otp-input-cell:focus {
     border-color: var(--accent);
-    background: #ffffff;
+    background: rgba(15, 23, 42, 0.6);
     box-shadow: 0 0 8px var(--accent-glow);
   }
   
@@ -986,7 +985,7 @@
     align-items: center;
     justify-content: space-between;
     padding: 12px 18px;
-    background: #f8fafc;
+    background: rgba(15, 23, 42, 0.4);
     border: 1.5px solid var(--border);
     border-radius: 10px;
     cursor: pointer;
@@ -1142,7 +1141,7 @@
       width: 280px;
       height: 100vh !important;
       z-index: 1000 !important;
-      background: white !important;
+      background: var(--bg) !important;
       transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1) !important;
       border-right: 1px solid var(--border) !important;
@@ -1180,7 +1179,7 @@
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
   }
   .view-tab-btn:hover {
-    background: rgba(255, 255, 255, 0.95);
+    background: rgba(255, 255, 255, 0.08);
     color: var(--text);
     transform: translateY(-1px);
   }
