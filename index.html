@@ -3515,6 +3515,10 @@ function renderTable(sentSet) {
         </div>
       </td>
     `;
+    const mobileLabels = ['Select', '#', 'Client', 'Vehicle', 'Policy', 'Term', 'Time Left', 'Premium', 'Remarks', 'Documents', 'Actions'];
+    Array.from(tr.children).forEach((cell, cellIndex) => {
+      if (!cell.dataset.label) cell.dataset.label = mobileLabels[cellIndex] || '';
+    });
     tbody.appendChild(tr);
   });
 }
