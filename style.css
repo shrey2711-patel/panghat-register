@@ -318,6 +318,20 @@ main {
 .select-pill:hover, .select-pill:focus { border-color: var(--accent); }
 .select-pill option { background: #ffffff; color: var(--text); }
 
+.date-simulator-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  transition: var(--transition);
+}
+.date-simulator-wrap:hover, .date-simulator-wrap:focus-within {
+  border-color: var(--accent);
+}
+
 /* Dynamic Custom Filter tabs */
 .filter-tabs {
   display: flex;
@@ -1250,27 +1264,93 @@ td {
     gap: 14px;
   }
 
-  .stats-grid,
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+  }
+
+  .stat-card {
+    padding: 12px 10px !important;
+  }
+
+  .stat-val {
+    font-size: 20px !important;
+  }
+
+  .stat-label {
+    font-size: 10px !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .stat-sub {
+    font-size: 9.5px !important;
+  }
+
   .nav-group {
     grid-template-columns: 1fr;
   }
 
-  .stat-card {
-    padding: 16px;
+  .filter-tabs {
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    width: 100%;
+    padding-bottom: 6px;
+    -webkit-overflow-scrolling: touch;
+    display: flex;
+    gap: 8px;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
 
-  .filter-tabs,
-  .btn-group,
-  .filter-bar {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    padding-bottom: 2px;
+  .filter-tabs::-webkit-scrollbar {
+    display: none;
   }
 
-  .btn-group .btn,
-  .filter-bar > *,
   .tab {
     flex: 0 0 auto;
+  }
+
+  .btn-group {
+    flex-wrap: wrap !important;
+    overflow-x: visible !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px;
+    width: 100%;
+    margin-top: 8px;
+  }
+
+  .btn-group .btn {
+    width: 100% !important;
+    justify-content: center;
+    padding: 10px !important;
+    font-size: 12px !important;
+    flex: none !important;
+  }
+
+  .filter-bar {
+    flex-wrap: wrap !important;
+    overflow-x: visible !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .filter-bar > * {
+    width: 100% !important;
+    flex: none !important;
+  }
+
+  @media (max-width: 480px) {
+    .btn-group, .filter-bar {
+      grid-template-columns: 1fr !important;
+    }
+    .stats-grid {
+      gap: 8px !important;
+    }
   }
 
   .table-card {
@@ -1305,15 +1385,16 @@ td {
   }
 
   tr {
-    background: #ffffff;
+    background: var(--card-bg);
     border: 1px solid var(--border);
-    border-radius: 10px;
+    border-radius: 12px;
     box-shadow: var(--shadow);
-    padding: 12px;
+    padding: 14px;
+    backdrop-filter: blur(10px);
   }
 
   tr:hover {
-    background: #ffffff;
+    background: var(--card-bg);
   }
 
   td {
