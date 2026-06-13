@@ -2090,9 +2090,11 @@ const uploadingDocIds = new Set();
 
 // Setup LocalStorage or load defaults
 // Setup IndexedDB Permanent Database
-const DB_NAME = 'InsuranceRegisterDB';
+const DB_NAME = 'PanghatRegisterDB';
 const DB_VERSION = 1;
-const STORE_NAME = 'policies';
+const STORE_NAME = 'panghat_policies';
+const FIREBASE_COLLECTION = 'panghat_policies';
+const FIREBASE_STORAGE_ROOT = 'panghat_policies';
 let dbInstance;
 
 function generateUniqueId() {
@@ -2120,7 +2122,7 @@ function initDatabase() {
   request.onerror = function() {
     logActivity("❌ Permanent database connection failed! Standard Storage fallback active.", "err");
     // Fallback to localStorage if blocked
-    const fallbackData = localStorage.getItem('insurance_ledger');
+    const fallbackData = localStorage.getItem('panghat_insurance_ledger');
     if (fallbackData) {
       try { DATA = JSON.parse(fallbackData); } catch(ex) { DATA = []; }
     } else {
@@ -2130,7 +2132,7 @@ function initDatabase() {
   };
 
   // Pre-fill simulator to actual local date or preserved simulated date
-  const preservedSimDate = localStorage.getItem('simulated_date');
+  const preservedSimDate = localStorage.getItem('panghat_simulated_date');
   if (preservedSimDate) {
     SIMULATED_TODAY = new Date(preservedSimDate);
     document.getElementById('dateSimulator').value = preservedSimDate;
@@ -2142,9 +2144,9 @@ function initDatabase() {
   SIMULATED_TODAY.setHours(0,0,0,0);
   
   // Set default message template if not set
-  if (!localStorage.getItem('whatsapp_template')) {
+  if (!localStorage.getItem('panghat_whatsapp_template')) {
     const defaultTemplate = `Dear {name},\n\nThis is a friendly reminder that the insurance for your vehicle {vehicle} ({plate}) {expiry_status}.\n\n🚗 Vehicle: {vehicle}\n🔖 Plate Number: {plate}\n🏢 Provider: {insurance}\n📅 Expiry Date: {expiry}\n\nRemarks/Notes: {remarks}\n\nPlease renew at your earliest convenience to avoid penalties.\n\nThank you for choosing us!`;
-    localStorage.setItem('whatsapp_template', defaultTemplate);
+    localStorage.setItem('panghat_whatsapp_template', defaultTemplate);
   }
 }
 
@@ -2153,7 +2155,7 @@ function loadAllRecordsFromDB() {
   const store = transaction.objectStore(STORE_NAME);
   
   // Migration check: check if localStorage has data to migrate
-  const localData = localStorage.getItem('insurance_ledger');
+  const localData = localStorage.getItem('panghat_insurance_ledger');
   if (localData) {
     try {
       const parsed = JSON.parse(localData);
@@ -2167,7 +2169,7 @@ function loadAllRecordsFromDB() {
             migratedCount++;
             if (migratedCount === parsed.length) {
               logActivity(`✅ Migration Complete: safely stored ${parsed.length} client files permanently!`, "info");
-              localStorage.removeItem('insurance_ledger');
+              localStorage.removeItem('panghat_insurance_ledger');
               loadAllRecordsFromDB(); // reload properly
             }
           };
@@ -2212,7 +2214,7 @@ function loadAllRecordsFromDB() {
       
       let isFirstLoad = true;
       
-      dbCloud.collection("policies").onSnapshot((querySnapshot) => {
+      dbCloud.collection(FIREBASE_COLLECTION).onSnapshot((querySnapshot) => {
         if (isFirstLoad) {
           isFirstLoad = false;
           
@@ -2247,7 +2249,7 @@ function loadAllRecordsFromDB() {
             store.delete(cloudItem.id);
             hasChanges = true;
             // Clean up from Firestore
-            dbCloud.collection("policies").doc(doc.id).delete().catch(()=>{});
+            dbCloud.collection(FIREBASE_COLLECTION).doc(doc.id).delete().catch(()=>{});
             return;
           }
           
@@ -2350,12 +2352,12 @@ function fetchRecords(store) {
       if (isCloudEnabled && firebaseInitialized) {
         removedRecords.forEach(item => {
           if (item.id) {
-            dbCloud.collection("policies").doc(String(item.id)).delete().catch(()=>{});
+            dbCloud.collection(FIREBASE_COLLECTION).doc(String(item.id)).delete().catch(()=>{});
             if (storageCloud) {
-              storageCloud.ref().child(`policies/${item.id}/policy_doc`).delete().catch(()=>{});
+              storageCloud.ref().child(`${FIREBASE_STORAGE_ROOT}/${item.id}/policy_doc`).delete().catch(()=>{});
               const docs = Array.isArray(item.kyc_docs) ? item.kyc_docs : [];
               docs.forEach((doc, dIdx) => {
-                storageCloud.ref().child(`policies/${item.id}/kyc_doc_${dIdx}`).delete().catch(()=>{});
+                storageCloud.ref().child(`${FIREBASE_STORAGE_ROOT}/${item.id}/kyc_doc_${dIdx}`).delete().catch(()=>{});
               });
             }
           }
@@ -2378,7 +2380,7 @@ function saveDatabase() {
       delete copy.kyc_docs;
       return copy;
     });
-    localStorage.setItem('insurance_ledger_backup', JSON.stringify(backupTextOnly));
+    localStorage.setItem('panghat_insurance_ledger_backup', JSON.stringify(backupTextOnly));
   } catch(e) {
     // silently fail
   }
@@ -2966,12 +2968,12 @@ function deleteEntry(idx) {
       // Cloud Sync delete
       const isCloudEnabled = FIREBASE_CONFIG.enabled;
       if (isCloudEnabled && firebaseInitialized) {
-        dbCloud.collection("policies").doc(String(dbId)).delete().catch(()=>{});
+        dbCloud.collection(FIREBASE_COLLECTION).doc(String(dbId)).delete().catch(()=>{});
         if (storageCloud) {
-          storageCloud.ref().child(`policies/${dbId}/policy_doc`).delete().catch(()=>{});
+          storageCloud.ref().child(`${FIREBASE_STORAGE_ROOT}/${dbId}/policy_doc`).delete().catch(()=>{});
           const docs = Array.isArray(itemToDelete.kyc_docs) ? itemToDelete.kyc_docs : [];
           docs.forEach((doc, dIdx) => {
-            storageCloud.ref().child(`policies/${dbId}/kyc_doc_${dIdx}`).delete().catch(()=>{});
+            storageCloud.ref().child(`${FIREBASE_STORAGE_ROOT}/${dbId}/kyc_doc_${dIdx}`).delete().catch(()=>{});
           });
         }
       }
@@ -3010,12 +3012,12 @@ function deleteSelected() {
         // Cloud Sync delete
         const isCloudEnabled = FIREBASE_CONFIG.enabled;
         if (isCloudEnabled && firebaseInitialized) {
-          dbCloud.collection("policies").doc(String(dbId)).delete().catch(()=>{});
+          dbCloud.collection(FIREBASE_COLLECTION).doc(String(dbId)).delete().catch(()=>{});
           if (storageCloud) {
-            storageCloud.ref().child(`policies/${dbId}/policy_doc`).delete().catch(()=>{});
+            storageCloud.ref().child(`${FIREBASE_STORAGE_ROOT}/${dbId}/policy_doc`).delete().catch(()=>{});
             const docs = Array.isArray(itemToDelete.kyc_docs) ? itemToDelete.kyc_docs : [];
             docs.forEach((doc, dIdx) => {
-              storageCloud.ref().child(`policies/${dbId}/kyc_doc_${dIdx}`).delete().catch(()=>{});
+              storageCloud.ref().child(`${FIREBASE_STORAGE_ROOT}/${dbId}/kyc_doc_${dIdx}`).delete().catch(()=>{});
             });
           }
         }
@@ -3363,7 +3365,7 @@ function updateSimulatedDate() {
   if (!selectedDate) return;
   SIMULATED_TODAY = new Date(selectedDate);
   SIMULATED_TODAY.setHours(0,0,0,0);
-  localStorage.setItem('simulated_date', selectedDate);
+  localStorage.setItem('panghat_simulated_date', selectedDate);
   
   // Update Header Date label
   document.getElementById('todayDateLabel').textContent = SIMULATED_TODAY.toLocaleDateString('en-IN', { weekday: 'short', day: '2-digit', month: 'long', year: 'numeric' });
@@ -3375,7 +3377,7 @@ function updateSimulatedDate() {
 function resetSimulatedDate() {
   const todayStr = new Date().toISOString().split('T')[0];
   document.getElementById('dateSimulator').value = todayStr;
-  localStorage.removeItem('simulated_date');
+  localStorage.removeItem('panghat_simulated_date');
   
   SIMULATED_TODAY = new Date(todayStr);
   SIMULATED_TODAY.setHours(0,0,0,0);
@@ -3398,7 +3400,7 @@ function applyFiltersAndStats() {
   const targetYear = document.getElementById('targetYearFilter').value;
   
   // Track sent set
-  const sentSet = new Set(JSON.parse(localStorage.getItem('waSent') || '[]'));
+  const sentSet = new Set(JSON.parse(localStorage.getItem('panghat_waSent') || '[]'));
   
   // Enrich items with computed statistics
   const enriched = DATA.map((item, idx) => {
@@ -3652,7 +3654,7 @@ function updateSelectedCount() {
 // MESSAGING & BULK DISPATCHER
 // ==============================================
 function buildWhatsAppLink(item) {
-  const template = localStorage.getItem('whatsapp_template');
+  const template = localStorage.getItem('panghat_whatsapp_template');
   const phone = item.phone.replace(/[^0-9]/g, '');
   
   const statusStr = item.daysLeft < 0 
@@ -3678,9 +3680,9 @@ function buildWhatsAppLink(item) {
 }
 
 function markAsSent(originalIdx) {
-  const sentSet = new Set(JSON.parse(localStorage.getItem('waSent') || '[]'));
+  const sentSet = new Set(JSON.parse(localStorage.getItem('panghat_waSent') || '[]'));
   sentSet.add(originalIdx);
-  localStorage.setItem('waSent', JSON.stringify([...sentSet]));
+  localStorage.setItem('panghat_waSent', JSON.stringify([...sentSet]));
   
   logActivity(`💬 WhatsApp opened for client: ${DATA[originalIdx].name}`, "info");
   
@@ -3713,9 +3715,9 @@ function triggerBulkSend() {
       
       window.open(link, '_blank');
       
-      const sentSet = new Set(JSON.parse(localStorage.getItem('waSent') || '[]'));
+      const sentSet = new Set(JSON.parse(localStorage.getItem('panghat_waSent') || '[]'));
       sentSet.add(origIdx);
-      localStorage.setItem('waSent', JSON.stringify([...sentSet]));
+      localStorage.setItem('panghat_waSent', JSON.stringify([...sentSet]));
       
       index++;
       setTimeout(sendNext, 2000); // 2 second delay to protect popup blockers
@@ -4014,7 +4016,7 @@ function handleJSONBackupSelect(input) {
 // MESSAGE TEMPLATING SYSTEM
 // ==============================================
 function openTemplateModal() {
-  document.getElementById('messageTemplateInput').value = localStorage.getItem('whatsapp_template');
+  document.getElementById('messageTemplateInput').value = localStorage.getItem('panghat_whatsapp_template');
   updateTemplatePreview();
   openModal('templateModal');
 }
@@ -4050,7 +4052,7 @@ function updateTemplatePreview() {
 
 function saveMessageTemplate() {
   const template = document.getElementById('messageTemplateInput').value;
-  localStorage.setItem('whatsapp_template', template);
+  localStorage.setItem('panghat_whatsapp_template', template);
   closeModal('templateModal');
   showToast("WhatsApp message template saved successfully!");
   logActivity("💬 Custom WhatsApp reminder message template updated.", "info");
@@ -4063,7 +4065,7 @@ function wipeEntireRegister() {
     const req = store.clear();
     req.onsuccess = async function() {
       // Clear localStorage backups
-      localStorage.removeItem('insurance_ledger_backup');
+      localStorage.removeItem('panghat_insurance_ledger_backup');
       
       // Clear Firestore
       const isCloudEnabled = FIREBASE_CONFIG.enabled;
@@ -4141,12 +4143,12 @@ window.addEventListener('click', (e) => {
 // Security API Settings Modal controls
 function openSecuritySettingsModal() {
   // Load Google Drive Config
-  const gdEnabled = localStorage.getItem('MMC_GDRIVE_ENABLED') === "true";
+  const gdEnabled = localStorage.getItem('PANGHAT_GDRIVE_ENABLED') === "true";
   document.getElementById('settingsGoogleDriveEnabled').checked = gdEnabled;
   toggleGoogleDriveInputs(gdEnabled);
   
-  document.getElementById('settingsGoogleDriveWebAppUrl').value = localStorage.getItem('MMC_GDRIVE_WEBAPP_URL') || '';
-  document.getElementById('settingsGoogleDriveFolderId').value = localStorage.getItem('MMC_GDRIVE_FOLDER_ID') || '';
+  document.getElementById('settingsGoogleDriveWebAppUrl').value = localStorage.getItem('PANGHAT_GDRIVE_WEBAPP_URL') || '';
+  document.getElementById('settingsGoogleDriveFolderId').value = localStorage.getItem('PANGHAT_GDRIVE_FOLDER_ID') || '';
   
   openModal('securitySettingsModal');
 }
@@ -4154,9 +4156,9 @@ function openSecuritySettingsModal() {
 function saveSecuritySettings() {
   // Save Google Drive configuration
   const gdEnabled = document.getElementById('settingsGoogleDriveEnabled').checked;
-  localStorage.setItem('MMC_GDRIVE_ENABLED', gdEnabled ? "true" : "false");
-  localStorage.setItem('MMC_GDRIVE_WEBAPP_URL', document.getElementById('settingsGoogleDriveWebAppUrl').value.trim());
-  localStorage.setItem('MMC_GDRIVE_FOLDER_ID', document.getElementById('settingsGoogleDriveFolderId').value.trim());
+  localStorage.setItem('PANGHAT_GDRIVE_ENABLED', gdEnabled ? "true" : "false");
+  localStorage.setItem('PANGHAT_GDRIVE_WEBAPP_URL', document.getElementById('settingsGoogleDriveWebAppUrl').value.trim());
+  localStorage.setItem('PANGHAT_GDRIVE_FOLDER_ID', document.getElementById('settingsGoogleDriveFolderId').value.trim());
   
   closeModal('securitySettingsModal');
   showToast("Security and Storage settings saved successfully!");
@@ -4214,7 +4216,7 @@ async function clearCloudDatabase() {
   if (!isCloudEnabled || !firebaseInitialized) return;
   
   try {
-    const querySnapshot = await dbCloud.collection("policies").get();
+    const querySnapshot = await dbCloud.collection(FIREBASE_COLLECTION).get();
     const batch = dbCloud.batch();
     
     for (const doc of querySnapshot.docs) {
@@ -4227,11 +4229,11 @@ async function clearCloudDatabase() {
       // Delete files from storage if we have storageCloud
       if (storageCloud) {
         if (data.policy_doc) {
-          storageCloud.ref().child(`policies/${dbId}/policy_doc`).delete().catch(()=>{});
+          storageCloud.ref().child(`${FIREBASE_STORAGE_ROOT}/${dbId}/policy_doc`).delete().catch(()=>{});
         }
         if (Array.isArray(data.kyc_docs)) {
           data.kyc_docs.forEach((docItem, dIdx) => {
-            storageCloud.ref().child(`policies/${dbId}/kyc_doc_${dIdx}`).delete().catch(()=>{});
+            storageCloud.ref().child(`${FIREBASE_STORAGE_ROOT}/${dbId}/kyc_doc_${dIdx}`).delete().catch(()=>{});
           });
         }
       }
@@ -4252,7 +4254,7 @@ async function uploadPolicyToFirebase(entry) {
     // Clone to avoid editing local state
     const cloudEntry = { ...entry };
     delete cloudEntry._synced;
-    const isGoogleDrive = localStorage.getItem('MMC_GDRIVE_ENABLED') === "true";
+    const isGoogleDrive = localStorage.getItem('PANGHAT_GDRIVE_ENABLED') === "true";
     
     // Upload Policy PDF
     if (entry.policy_doc && entry.policy_doc.data && entry.policy_doc.data.startsWith('data:')) {
@@ -4267,7 +4269,7 @@ async function uploadPolicyToFirebase(entry) {
           };
         } else {
           showToast("☁️ Uploading Policy PDF to Cloud Storage...");
-          const fileUrl = await uploadBase64ToStorage(`policies/${docId}/policy_doc`, entry.policy_doc);
+          const fileUrl = await uploadBase64ToStorage(`${FIREBASE_STORAGE_ROOT}/${docId}/policy_doc`, entry.policy_doc);
           cloudEntry.policy_doc = {
             name: entry.policy_doc.name,
             type: entry.policy_doc.type,
@@ -4304,7 +4306,7 @@ async function uploadPolicyToFirebase(entry) {
               if (isGoogleDrive) {
                 fileUrl = await uploadFileToGoogleDrive(doc);
               } else {
-                fileUrl = await uploadBase64ToStorage(`policies/${docId}/kyc_doc_${i}`, doc);
+                fileUrl = await uploadBase64ToStorage(`${FIREBASE_STORAGE_ROOT}/${docId}/kyc_doc_${i}`, doc);
               }
               uploadedDocs.push({
                 name: doc.name,
@@ -4354,7 +4356,7 @@ async function uploadPolicyToFirebase(entry) {
       }
     }
     
-    await dbCloud.collection("policies").doc(docId).set(cloudEntry);
+    await dbCloud.collection(FIREBASE_COLLECTION).doc(docId).set(cloudEntry);
     logActivity(`☁️ Cloud Synced: ${entry.name} saved to Firebase.`, "info");
   } finally {
     setTimeout(() => {
@@ -4364,8 +4366,8 @@ async function uploadPolicyToFirebase(entry) {
 }
 
 async function uploadFileToGoogleDrive(doc) {
-  const webAppUrl = localStorage.getItem('MMC_GDRIVE_WEBAPP_URL');
-  const folderId = localStorage.getItem('MMC_GDRIVE_FOLDER_ID') || '';
+  const webAppUrl = localStorage.getItem('PANGHAT_GDRIVE_WEBAPP_URL');
+  const folderId = localStorage.getItem('PANGHAT_GDRIVE_FOLDER_ID') || '';
   
   if (!webAppUrl) {
     throw new Error("Google Apps Script Web App URL is not configured.");

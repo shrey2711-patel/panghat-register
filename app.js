@@ -26,9 +26,11 @@ const uploadingDocIds = new Set();
 
 // Setup LocalStorage or load defaults
 // Setup IndexedDB Permanent Database
-const DB_NAME = 'InsuranceRegisterDB';
+const DB_NAME = 'PanghatRegisterDB';
 const DB_VERSION = 1;
-const STORE_NAME = 'policies';
+const STORE_NAME = 'panghat_policies';
+const FIREBASE_COLLECTION = 'panghat_policies';
+const FIREBASE_STORAGE_ROOT = 'panghat_policies';
 let dbInstance;
 
 function generateUniqueId() {
@@ -48,10 +50,10 @@ function initDatabase() {
   request.onsuccess = function(e) {
     dbInstance = e.target.result;
     logActivity("🗄️ Permanent database (IndexedDB) connected successfully.", "info");
-    
+
     // Load records and run migrations
     loadAllRecordsFromDB();
-    
+
     // Connect to Firebase Cloud Sync if active
     initFirebaseConnection();
   };
@@ -59,7 +61,7 @@ function initDatabase() {
   request.onerror = function() {
     logActivity("❌ Permanent database connection failed! Standard Storage fallback active.", "err");
     // Fallback to localStorage if blocked
-    const fallbackData = localStorage.getItem('insurance_ledger');
+    const fallbackData = localStorage.getItem('panghat_insurance_ledger');
     if (fallbackData) {
       try { DATA = JSON.parse(fallbackData); } catch(ex) { DATA = []; }
     } else {
@@ -69,7 +71,7 @@ function initDatabase() {
   };
 
   // Pre-fill simulator to actual local date or preserved simulated date
-  const preservedSimDate = localStorage.getItem('simulated_date');
+  const preservedSimDate = localStorage.getItem('panghat_simulated_date');
   if (preservedSimDate) {
     SIMULATED_TODAY = new Date(preservedSimDate);
     document.getElementById('dateSimulator').value = preservedSimDate;
@@ -79,20 +81,20 @@ function initDatabase() {
     SIMULATED_TODAY = new Date(todayStr);
   }
   SIMULATED_TODAY.setHours(0,0,0,0);
-  
+
   // Set default message template if not set
-  if (!localStorage.getItem('whatsapp_template')) {
+  if (!localStorage.getItem('panghat_whatsapp_template')) {
     const defaultTemplate = `Dear {name},\n\nThis is a friendly reminder that the insurance for your vehicle {vehicle} ({plate}) {expiry_status}.\n\n🚗 Vehicle: {vehicle}\n🔖 Plate Number: {plate}\n🏢 Provider: {insurance}\n📅 Expiry Date: {expiry}\n\nRemarks/Notes: {remarks}\n\nPlease renew at your earliest convenience to avoid penalties.\n\nThank you for choosing us!`;
-    localStorage.setItem('whatsapp_template', defaultTemplate);
+    localStorage.setItem('panghat_whatsapp_template', defaultTemplate);
   }
 }
 
 function loadAllRecordsFromDB() {
   const transaction = dbInstance.transaction([STORE_NAME], 'readwrite');
   const store = transaction.objectStore(STORE_NAME);
-  
+
   // Migration check: check if localStorage has data to migrate
-  const localData = localStorage.getItem('insurance_ledger');
+  const localData = localStorage.getItem('panghat_insurance_ledger');
   if (localData) {
     try {
       const parsed = JSON.parse(localData);
@@ -106,7 +108,7 @@ function loadAllRecordsFromDB() {
             migratedCount++;
             if (migratedCount === parsed.length) {
               logActivity(`✅ Migration Complete: safely stored ${parsed.length} client files permanently!`, "info");
-              localStorage.removeItem('insurance_ledger');
+              localStorage.removeItem('panghat_insurance_ledger');
               fetchRecords(store);
             }
           };
@@ -117,7 +119,7 @@ function loadAllRecordsFromDB() {
       console.error("Migration failed: ", e);
     }
   }
-  
+
   fetchRecords(store);
 }
 
@@ -126,7 +128,7 @@ function fetchRecords(store) {
   req.onsuccess = function(e) {
     const rawData = e.target.result || [];
     let hasMigration = false;
-    
+
     // Migrate any legacy numeric IDs to string IDs
     rawData.forEach(item => {
       if (typeof item.id === 'number') {
@@ -137,15 +139,15 @@ function fetchRecords(store) {
         hasMigration = true;
       }
     });
-    
+
     if (hasMigration) {
       logActivity("🗄️ Database migration: converted legacy record numeric IDs to string IDs", "info");
       loadAllRecordsFromDB(); // Reload updated records
       return;
     }
-    
+
     DATA = rawData;
-    
+
     // Dynamic cleanup: clear any 2025 records
     const originalLength = DATA.length;
     DATA = DATA.filter(item => {
@@ -156,7 +158,7 @@ function fetchRecords(store) {
       saveAllToIndexedDB();
       setTimeout(() => logActivity(`🗑️ dynamic cleanup: Cleared ${originalLength - DATA.length} old 2025 records.`, "err"), 100);
     }
-    
+
     applyFiltersAndStats();
   };
 }
@@ -171,7 +173,7 @@ function saveDatabase() {
       delete copy.kyc_docs;
       return copy;
     });
-    localStorage.setItem('insurance_ledger_backup', JSON.stringify(backupTextOnly));
+    localStorage.setItem('panghat_insurance_ledger_backup', JSON.stringify(backupTextOnly));
   } catch(e) {
     // silently fail
   }
@@ -222,7 +224,7 @@ function getMultipleFilesData(fileInput) {
       resolve([]);
       return;
     }
-    
+
     const results = [];
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
@@ -254,7 +256,7 @@ function previewUploadFile(input, previewId) {
     let sizeStr = '';
     if (file.size > 1024 * 1024) sizeStr = (file.size / (1024 * 1024)).toFixed(2) + ' MB';
     else sizeStr = (file.size / 1024).toFixed(1) + ' KB';
-    
+
     label.innerHTML = `<i class="fa-solid fa-file-circle-check" style="color:var(--accent);"></i> ${file.name} (${sizeStr})`;
   } else {
     label.textContent = "No file attached";
@@ -291,7 +293,7 @@ function downloadDoc(idx, type) {
   } else {
     const docs = Array.isArray(item.kyc_docs) ? item.kyc_docs : (item.kyc_doc ? [item.kyc_doc] : []);
     if (docs.length === 0) return;
-    
+
     // Download each file sequentially with a 350ms delay to prevent browser blockages
     docs.forEach((doc, dIdx) => {
       setTimeout(() => {
@@ -316,20 +318,20 @@ function triggerFileDownload(doc, clientName) {
       showToast(`Opening: ${doc.name}`);
       return;
     }
-    
+
     const parts = doc.data.split(';base64,');
     const contentType = parts[0].split(':')[1];
     const raw = window.atob(parts[1]);
     const rawLength = raw.length;
     const uInt8Array = new Uint8Array(rawLength);
-    
+
     for (let i = 0; i < rawLength; ++i) {
       uInt8Array[i] = raw.charCodeAt(i);
     }
-    
+
     const blob = new Blob([uInt8Array], { type: contentType });
     const url = URL.createObjectURL(blob);
-    
+
     const a = document.createElement('a');
     a.href = url;
     a.download = doc.name;
@@ -337,7 +339,7 @@ function triggerFileDownload(doc, clientName) {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    
+
     logActivity(`📥 Downloaded document: ${doc.name} for client ${clientName}`, "info");
     showToast(`Downloading: ${doc.name}`);
   } catch(e) {
@@ -351,13 +353,13 @@ function logActivity(text, type = "default") {
   const ledger = document.getElementById('activityLedger');
   const now = new Date();
   const timeStr = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-  
+
   const row = document.createElement('div');
   row.className = `ledger-row ${type}`;
   row.innerHTML = `<span class="time">[${timeStr}]</span> <span>${text}</span>`;
-  
+
   ledger.insertBefore(row, ledger.firstChild);
-  
+
   // Cap ledger items to 50
   if (ledger.childNodes.length > 50) {
     ledger.removeChild(ledger.lastChild);
@@ -412,7 +414,7 @@ function showToast(msg, isError = false) {
   const t = document.getElementById('toast');
   const icon = document.getElementById('toastIcon');
   document.getElementById('toastMsg').textContent = msg;
-  
+
   if (isError) {
     t.classList.add('err');
     icon.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i>';
@@ -420,7 +422,7 @@ function showToast(msg, isError = false) {
     t.classList.remove('err');
     icon.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
   }
-  
+
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 3000);
 }
@@ -440,13 +442,13 @@ function openAddModal() {
   document.getElementById('addAmount').value = '';
   document.getElementById('addPhone').value = '';
   document.getElementById('addNotes').value = '';
-  
+
   // Clear document files inputs and previews
   document.getElementById('addPolicyDoc').value = '';
   document.getElementById('addKycDoc').value = '';
   document.getElementById('addPolicyPreview').textContent = 'No file attached';
   document.getElementById('addKycPreview').textContent = 'No files attached';
-  
+
   openModal('addModal');
 }
 
@@ -461,16 +463,16 @@ async function submitAddEntry() {
   const amount = document.getElementById('addAmount').value;
   const phone = document.getElementById('addPhone').value.trim();
   const notes = document.getElementById('addNotes').value.trim();
-  
+
   if (!name || !vehicle || !plate || !insurance || !endDate || !phone) {
     showToast("Please fill in all mandatory (*) fields!", true);
     return;
   }
-  
+
   // Read document files
   const policyDoc = await getFileData(document.getElementById('addPolicyDoc'));
   const kycDocs = await getMultipleFilesData(document.getElementById('addKycDoc'));
-  
+
   const newEntry = {
     id: generateUniqueId(),
     name: name,
@@ -487,24 +489,24 @@ async function submitAddEntry() {
     kyc_docs: kycDocs,
     kyc_doc: kycDocs.length > 0 ? kycDocs[0] : null // compatibility
   };
-  
+
   // Save to Database (Cloud Sync or IndexedDB Fallback)
   if (cloudSyncActive) {
     showToast("Uploading attachments to cloud...", false);
     (async () => {
       let docId;
       try {
-        const newDocRef = firestoreInstance.collection('policies').doc();
+        const newDocRef = firestoreInstance.collection(FIREBASE_COLLECTION).doc();
         docId = newDocRef.id;
         uploadingDocIds.add(docId);
         const cloudEntry = { ...newEntry };
         delete cloudEntry.id;
-        
+
         if (newEntry.policy_doc) {
           const url = await uploadFileToFirebaseStorage(newDocRef.id, newEntry.policy_doc, 'policy_doc');
           cloudEntry.policy_doc = { name: newEntry.policy_doc.name, type: newEntry.policy_doc.type, url };
         }
-        
+
         if (newEntry.kyc_docs && newEntry.kyc_docs.length > 0) {
           const cloudKycDocs = [];
           for (let i = 0; i < newEntry.kyc_docs.length; i++) {
@@ -515,7 +517,7 @@ async function submitAddEntry() {
           cloudEntry.kyc_docs = cloudKycDocs;
           cloudEntry.kyc_doc = cloudKycDocs.length > 0 ? cloudKycDocs[0] : null;
         }
-        
+
         await newDocRef.set(cloudEntry);
         closeModal('addModal');
         showToast(`Successfully saved ${name} to cloud!`);
@@ -534,7 +536,7 @@ async function submitAddEntry() {
     })();
     return;
   }
-  
+
   saveToLocalIndexedDBOnly(newEntry, name, plate);
 }
 
@@ -542,7 +544,7 @@ function saveToLocalIndexedDBOnly(entry, name, plate) {
   const transaction = dbInstance.transaction([STORE_NAME], 'readwrite');
   const store = transaction.objectStore(STORE_NAME);
   const req = store.add(entry);
-  
+
   req.onsuccess = function(e) {
     entry.id = e.target.result; // Set autoincrement primary key
     DATA.push(entry);
@@ -552,7 +554,7 @@ function saveToLocalIndexedDBOnly(entry, name, plate) {
     showToast(`Successfully added record for ${name}!`);
     logActivity(`➕ Added daily policy register: ${name} (${formatPlateNumber(plate)})`, "info");
   };
-  
+
   req.onerror = function() {
     showToast("Failed to save to local database!", true);
   };
@@ -571,11 +573,11 @@ function openEditModal(idx) {
   document.getElementById('editAmount').value = item.amount || '';
   document.getElementById('editPhone').value = item.phone;
   document.getElementById('editNotes').value = item.notes || '';
-  
+
   // Reset file selectors
   document.getElementById('editPolicyDoc').value = '';
   document.getElementById('editKycDoc').value = '';
-  
+
   // Load existing files previews
   const policyPrev = document.getElementById('editPolicyPreview');
   if (item.policy_doc) {
@@ -583,7 +585,7 @@ function openEditModal(idx) {
   } else {
     policyPrev.textContent = "No file attached";
   }
-  
+
   const kycPrev = document.getElementById('editKycPreview');
   const kycDocs = Array.isArray(item.kyc_docs) ? item.kyc_docs : (item.kyc_doc ? [item.kyc_doc] : []);
   if (kycDocs.length > 0) {
@@ -592,7 +594,7 @@ function openEditModal(idx) {
   } else {
     kycPrev.textContent = "No files attached";
   }
-  
+
   openModal('editModal');
 }
 
@@ -608,24 +610,24 @@ async function submitEditEntry() {
   const amount = document.getElementById('editAmount').value;
   const phone = document.getElementById('editPhone').value.trim();
   const notes = document.getElementById('editNotes').value.trim();
-  
+
   if (!name || !vehicle || !plate || !insurance || !endDate || !phone) {
     showToast("Please fill in all mandatory fields!", true);
     return;
   }
-  
+
   // Process attachments (preserve existing if no new ones are uploaded)
   let policyDoc = await getFileData(document.getElementById('editPolicyDoc'));
   if (!policyDoc && DATA[idx].policy_doc) {
     policyDoc = DATA[idx].policy_doc;
   }
-  
+
   let kycDocs = await getMultipleFilesData(document.getElementById('editKycDoc'));
   if (kycDocs.length === 0) {
     // Preserve existing kyc_docs if no new files selected
     kycDocs = Array.isArray(DATA[idx].kyc_docs) ? DATA[idx].kyc_docs : (DATA[idx].kyc_doc ? [DATA[idx].kyc_doc] : []);
   }
-  
+
   const updatedEntry = {
     ...DATA[idx],
     name: name,
@@ -642,7 +644,7 @@ async function submitEditEntry() {
     kyc_docs: kycDocs,
     kyc_doc: kycDocs.length > 0 ? kycDocs[0] : null // compatibility
   };
-  
+
   // Write to Database (Cloud Sync or IndexedDB Fallback)
   if (cloudSyncActive) {
     showToast("Updating cloud files...", false);
@@ -652,13 +654,13 @@ async function submitEditEntry() {
       try {
         const cloudEntry = { ...updatedEntry };
         delete cloudEntry.id;
-        
+
         // Upload new files if uploaded
         if (updatedEntry.policy_doc && updatedEntry.policy_doc.data && !updatedEntry.policy_doc.url) {
           const url = await uploadFileToFirebaseStorage(docId, updatedEntry.policy_doc, 'policy_doc');
           cloudEntry.policy_doc = { name: updatedEntry.policy_doc.name, type: updatedEntry.policy_doc.type, url };
         }
-        
+
         if (updatedEntry.kyc_docs && updatedEntry.kyc_docs.length > 0) {
           const cloudKycDocs = [];
           for (let i = 0; i < updatedEntry.kyc_docs.length; i++) {
@@ -673,9 +675,9 @@ async function submitEditEntry() {
           cloudEntry.kyc_docs = cloudKycDocs;
           cloudEntry.kyc_doc = cloudKycDocs.length > 0 ? cloudKycDocs[0] : null;
         }
-        
-        await firestoreInstance.collection('policies').doc(docId).set(cloudEntry);
-        
+
+        await firestoreInstance.collection(FIREBASE_COLLECTION).doc(docId).set(cloudEntry);
+
         closeModal('editModal');
         showToast(`Successfully updated ${name} in cloud!`);
         logActivity("📝 Updated cloud entry: " + name + " (" + formatPlateNumber(plate) + ")", "info");
@@ -691,7 +693,7 @@ async function submitEditEntry() {
     })();
     return;
   }
-  
+
   saveEditToLocalIndexedDBOnly(idx, updatedEntry, name, plate);
 }
 
@@ -699,7 +701,7 @@ function saveEditToLocalIndexedDBOnly(idx, updatedEntry, name, plate) {
   const transaction = dbInstance.transaction([STORE_NAME], 'readwrite');
   const store = transaction.objectStore(STORE_NAME);
   const req = store.put(updatedEntry);
-  
+
   req.onsuccess = function() {
     DATA[idx] = updatedEntry;
     saveDatabase(); // redundant fallback
@@ -708,7 +710,7 @@ function saveEditToLocalIndexedDBOnly(idx, updatedEntry, name, plate) {
     showToast(`Successfully updated register for ${name}`);
     logActivity("📝 Updated ledger entry: " + name + " (" + formatPlateNumber(plate) + ")", "info");
   };
-  
+
   req.onerror = function() {
     showToast("Failed to update local database!", true);
   };
@@ -719,12 +721,12 @@ function deleteEntry(idx) {
     const name = DATA[idx].name;
     const plate = DATA[idx].plate;
     const dbId = String(DATA[idx].id);
-    
+
     if (cloudSyncActive) {
       showToast("Deleting from cloud...", false);
       (async () => {
         try {
-          const docRef = firestoreInstance.collection('policies').doc(dbId);
+          const docRef = firestoreInstance.collection(FIREBASE_COLLECTION).doc(dbId);
           const docSnap = await docRef.get();
           if (docSnap.exists) {
             const data = docSnap.data();
@@ -747,11 +749,11 @@ function deleteEntry(idx) {
       })();
       return;
     }
-    
+
     const transaction = dbInstance.transaction([STORE_NAME], 'readwrite');
     const store = transaction.objectStore(STORE_NAME);
     const req = store.delete(dbId);
-    
+
     req.onsuccess = function() {
       DATA.splice(idx, 1);
       saveDatabase(); // redundant fallback
@@ -759,7 +761,7 @@ function deleteEntry(idx) {
       showToast(`Removed policy register for ${name}`);
       logActivity(`❌ Deleted policy register: ${name} (${plate})`, "err");
     };
-    
+
     req.onerror = function() {
       showToast("Failed to delete from database!", true);
     };
@@ -770,17 +772,17 @@ function deleteEntry(idx) {
 function deleteSelected() {
   const checkboxes = document.querySelectorAll('.row-cb:checked');
   if (checkboxes.length === 0) return;
-  
+
   if (confirm(`Are you absolutely sure you want to delete ${checkboxes.length} selected policy records? This action is permanent!`)) {
     const indicesToDelete = Array.from(checkboxes).map(cb => Number(cb.dataset.index)).sort((a,b) => b - a);
-    
+
     if (cloudSyncActive) {
       showToast("Deleting bulk records from cloud...", false);
       (async () => {
         try {
           for (const idx of indicesToDelete) {
             const dbId = DATA[idx].id;
-            const docRef = firestoreInstance.collection('policies').doc(dbId);
+            const docRef = firestoreInstance.collection(FIREBASE_COLLECTION).doc(dbId);
             const docSnap = await docRef.get();
             if (docSnap.exists) {
               const data = docSnap.data();
@@ -805,12 +807,12 @@ function deleteSelected() {
       })();
       return;
     }
-    
+
     const transaction = dbInstance.transaction([STORE_NAME], 'readwrite');
     const store = transaction.objectStore(STORE_NAME);
-    
+
     let deletedCount = 0;
-    
+
     indicesToDelete.forEach(idx => {
       const dbId = DATA[idx].id;
       const req = store.delete(dbId);
@@ -832,16 +834,27 @@ function deleteSelected() {
 // ==============================================
 // VIEW RENDERING ENGINE & STATISTICS
 // ==============================================
+function updateLiveDateTime() {
+  const dateLabel = document.getElementById('todayDateLabel');
+  if (!dateLabel) return;
+
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-IN', { weekday: 'short', day: '2-digit', month: 'long', year: 'numeric' });
+  const timeStr = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+
+  dateLabel.textContent = `${dateStr} • ${timeStr}`;
+}
+
 function updateSimulatedDate() {
   const selectedDate = document.getElementById('dateSimulator').value;
   if (!selectedDate) return;
   SIMULATED_TODAY = new Date(selectedDate);
   SIMULATED_TODAY.setHours(0,0,0,0);
-  localStorage.setItem('simulated_date', selectedDate);
-  
-  // Update Header Date label
-  document.getElementById('todayDateLabel').textContent = SIMULATED_TODAY.toLocaleDateString('en-IN', { weekday: 'short', day: '2-digit', month: 'long', year: 'numeric' });
-  
+  localStorage.setItem('panghat_simulated_date', selectedDate);
+
+  // Update Header Date label with live time
+  updateLiveDateTime();
+
   applyFiltersAndStats();
   logActivity(`⏰ Register calendar simulated to: ${formatDate(selectedDate)}`, "info");
 }
@@ -849,12 +862,12 @@ function updateSimulatedDate() {
 function resetSimulatedDate() {
   const todayStr = new Date().toISOString().split('T')[0];
   document.getElementById('dateSimulator').value = todayStr;
-  localStorage.removeItem('simulated_date');
-  
+  localStorage.removeItem('panghat_simulated_date');
+
   SIMULATED_TODAY = new Date(todayStr);
   SIMULATED_TODAY.setHours(0,0,0,0);
-  document.getElementById('todayDateLabel').textContent = SIMULATED_TODAY.toLocaleDateString('en-IN', { weekday: 'short', day: '2-digit', month: 'long', year: 'numeric' });
-  
+  updateLiveDateTime();
+
   applyFiltersAndStats();
   logActivity("⏰ Simulated calendar reset back to current actual system time.", "info");
 }
@@ -870,10 +883,10 @@ function applyFiltersAndStats() {
   const query = document.getElementById('searchBox').value.trim();
   const selectedMonth = document.getElementById('monthFilter').value;
   const targetYear = document.getElementById('targetYearFilter').value;
-  
+
   // Track sent set
-  const sentSet = new Set(JSON.parse(localStorage.getItem('waSent') || '[]'));
-  
+  const sentSet = new Set(JSON.parse(localStorage.getItem('panghat_waSent') || '[]'));
+
   // Enrich items with computed statistics
   const enriched = DATA.map((item, idx) => {
     const exp = new Date(item.end_date);
@@ -888,17 +901,17 @@ function applyFiltersAndStats() {
   let expiredCount = 0;
   let urgentCount = 0;
   let incomingCount = 0;
-  
+
   enriched.forEach(item => {
     // Only calculate stats for policies matches target year
     const yearMatch = targetYear === 'all' || (item.expDate.getFullYear() === Number(targetYear));
     if (!yearMatch) return;
-    
+
     if (item.daysLeft >= 0) {
       totalPremium += Number(item.amount) || 0;
       activePremiumCount++;
     }
-    
+
     if (item.daysLeft < 0) {
       expiredCount++;
     } else if (item.daysLeft <= 3) {
@@ -907,7 +920,7 @@ function applyFiltersAndStats() {
       incomingCount++;
     }
   });
-  
+
   // Update Stats UI
   document.getElementById('premiumValue').textContent = formatCurrency(totalPremium);
   document.getElementById('premiumCount').textContent = `${activePremiumCount} Active Policies`;
@@ -920,33 +933,33 @@ function applyFiltersAndStats() {
     // Year filter check
     const yearMatch = targetYear === 'all' || (item.expDate.getFullYear() === Number(targetYear));
     if (!yearMatch) return false;
-    
+
     // Month filter check (based on end date)
     const monthMatch = selectedMonth === 'all' || (item.expDate.getMonth() === Number(selectedMonth));
     if (!monthMatch) return false;
-    
+
     // Search query check
     let queryMatch = true;
     if (query) {
-      queryMatch = item.name.includes(query) || 
-                   item.vehicle.includes(query) || 
-                   item.plate.includes(query) || 
+      queryMatch = item.name.includes(query) ||
+                   item.vehicle.includes(query) ||
+                   item.plate.includes(query) ||
                    item.insurance.includes(query) ||
                    (item.policy_no && item.policy_no.includes(query));
     }
     if (!queryMatch) return false;
-    
+
     // Status Filter Check
     const bucket = getDaysBucket(item.daysLeft);
     const isSent = sentSet.has(item.originalIdx);
-    
+
     if (activeStatusFilter === 'all') return true;
     if (activeStatusFilter === 'expired') return bucket === 'expired';
     if (activeStatusFilter === 'today') return bucket === 'today';
     if (activeStatusFilter === '3') return bucket === 'today' || bucket === 'days1' || bucket === 'days3';
     if (activeStatusFilter === '7') return ['today','days1','days3','days7'].includes(bucket);
     if (activeStatusFilter === 'unsent') return item.daysLeft <= 7 && !isSent;
-    
+
     return true;
   });
 
@@ -957,21 +970,21 @@ function applyFiltersAndStats() {
 function renderTable(sentSet) {
   const tbody = document.getElementById('registerTableBody');
   const empty = document.getElementById('emptyRegisterState');
-  
+
   tbody.innerHTML = '';
-  
+
   if (filteredData.length === 0) {
     empty.style.display = 'block';
     return;
   }
-  
+
   empty.style.display = 'none';
-  
+
   filteredData.forEach((item, index) => {
     const bucket = getDaysBucket(item.daysLeft);
     const label = formatDaysLabel(item.daysLeft);
     const isSent = sentSet.has(item.originalIdx);
-    
+
     // Detect data warnings
     let integrityHelp = '';
     if (!item.phone || item.phone.length < 8) {
@@ -980,16 +993,16 @@ function renderTable(sentSet) {
     if (!item.policy_no) {
       integrityHelp += `<span class="integrity-alert" style="color:var(--text-muted);"><i class="fa-solid fa-circle-question"></i> No Policy No</span>`;
     }
-    
+
     const waUrl = buildWhatsAppLink(item);
-    
-    const btnWa = isSent 
+
+    const btnWa = isSent
       ? `<a href="${waUrl}" target="_blank" class="btn-wa-action sent" onclick="markAsSent(${item.originalIdx})"><i class="fa-solid fa-circle-check"></i> Resend</a>`
       : `<a href="${waUrl}" target="_blank" class="btn-wa-action" onclick="markAsSent(${item.originalIdx})"><i class="fa-brands fa-whatsapp"></i> Send</a>`;
-      
+
     // Style provider tag class
     const insClass = item.insurance.toLowerCase().replace(/\s+/g, '');
-    
+
     // Document Button Builders
     let policyBtn = '';
     if (item.policy_doc) {
@@ -1090,7 +1103,7 @@ function updateSelectedCount() {
   document.getElementById('selectedCount').textContent = count;
   document.getElementById('btnSendBulk').disabled = count === 0;
   document.getElementById('btnDeleteSelected').disabled = count === 0;
-  
+
   // highlight selected rows
   document.querySelectorAll('.row-cb').forEach(cb => {
     const row = document.getElementById(`row-${cb.dataset.index}`);
@@ -1105,14 +1118,14 @@ function updateSelectedCount() {
 // MESSAGING & BULK DISPATCHER
 // ==============================================
 function buildWhatsAppLink(item) {
-  const template = localStorage.getItem('whatsapp_template');
+  const template = localStorage.getItem('panghat_whatsapp_template');
   const phone = item.phone.replace(/[^0-9]/g, '');
-  
-  const statusStr = item.daysLeft < 0 
+
+  const statusStr = item.daysLeft < 0
     ? `has already EXPIRED on ${formatDate(item.end_date)}`
-    : item.daysLeft === 0 
+    : item.daysLeft === 0
     ? `expires TODAY!`
-    : item.daysLeft === 1 
+    : item.daysLeft === 1
     ? `expires TOMORROW!`
     : `will expire in ${item.daysLeft} days on ${formatDate(item.end_date)}`;
 
@@ -1131,12 +1144,12 @@ function buildWhatsAppLink(item) {
 }
 
 function markAsSent(originalIdx) {
-  const sentSet = new Set(JSON.parse(localStorage.getItem('waSent') || '[]'));
+  const sentSet = new Set(JSON.parse(localStorage.getItem('panghat_waSent') || '[]'));
   sentSet.add(originalIdx);
-  localStorage.setItem('waSent', JSON.stringify([...sentSet]));
-  
+  localStorage.setItem('panghat_waSent', JSON.stringify([...sentSet]));
+
   logActivity(`💬 WhatsApp opened for client: ${DATA[originalIdx].name}`, "info");
-  
+
   // Quick timeout to update UI state
   setTimeout(() => applyFiltersAndStats(), 1000);
 }
@@ -1145,12 +1158,12 @@ function markAsSent(originalIdx) {
 function triggerBulkSend() {
   const checkboxes = document.querySelectorAll('.row-cb:checked');
   if (checkboxes.length === 0) return;
-  
+
   const targetIndices = Array.from(checkboxes).map(cb => Number(cb.dataset.index));
-  
+
   if (confirm(`You have queued ${targetIndices.length} WhatsApp reminders. Because of browser security, we will open them in separate tabs. Please enable popups! Proceed?`)) {
     let index = 0;
-    
+
     function sendNext() {
       if (index >= targetIndices.length) {
         showToast(`Dispatched all ${targetIndices.length} reminders!`);
@@ -1159,17 +1172,17 @@ function triggerBulkSend() {
         applyFiltersAndStats();
         return;
       }
-      
+
       const origIdx = targetIndices[index];
       const item = DATA[origIdx];
       const link = buildWhatsAppLink(item);
-      
+
       window.open(link, '_blank');
-      
-      const sentSet = new Set(JSON.parse(localStorage.getItem('waSent') || '[]'));
+
+      const sentSet = new Set(JSON.parse(localStorage.getItem('panghat_waSent') || '[]'));
       sentSet.add(origIdx);
-      localStorage.setItem('waSent', JSON.stringify([...sentSet]));
-      
+      localStorage.setItem('panghat_waSent', JSON.stringify([...sentSet]));
+
       index++;
       setTimeout(sendNext, 2000); // 2 second delay to protect popup blockers
     }
@@ -1195,7 +1208,7 @@ function parseExcelFile(file) {
       const sheetName = workbook.SheetNames[0];
       const sheet = workbook.Sheets[sheetName];
       const rawJson = XLSX.utils.sheet_to_json(sheet, { defval: "" });
-      
+
       if (rawJson.length === 0) {
         showToast("Excel sheet has no rows of data!", true);
         return;
@@ -1229,7 +1242,7 @@ function parseExcelFile(file) {
       applyFiltersAndStats();
       showToast(`Successfully imported ${importedRecords.length} policies from Excel!`);
       logActivity(`📥 Imported file: "${file.name}" with ${importedRecords.length} active rows`, "info");
-      
+
     } catch(err) {
       showToast("Error parsing Excel file sheet! Check format.", true);
       logActivity(`❌ Import error: ${err.message}`, "err");
@@ -1252,10 +1265,10 @@ function mapExcelRow(row) {
   const vehicle = findVal(['vehicle', 'vehical', 'model', 'car', 'bike']);
   const plate = findVal(['numberplate', 'plate', 'plateno', 'vehicleno', 'regno', 'numberplate']);
   const insurance = findVal(['insurance', 'inscompany', 'provider', 'company']);
-  
+
   let startDateRaw = findVal(['date', 'startdate', 'issuedate']);
   let endDateRaw = findVal(['enddate', 'expirydate', 'expdate', 'duedate']);
-  
+
   const policyNo = findVal(['policyno', 'policy', 'policynumber']);
   const amount = findVal(['amount', 'premium', 'price', 'cost']);
   const phone = findVal(['contactno', 'phone', 'mobile', 'contact', 'phoneno']);
@@ -1270,7 +1283,7 @@ function mapExcelRow(row) {
     }
     const cleanStr = String(d).trim();
     if (!cleanStr) return '';
-    
+
     // Try to parse DD-MM-YYYY
     const dmyMatch = cleanStr.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/);
     if (dmyMatch) {
@@ -1279,7 +1292,7 @@ function mapExcelRow(row) {
       const year = dmyMatch[3];
       return `${year}-${month}-${day}`;
     }
-    
+
     const parsed = new Date(cleanStr);
     if (!isNaN(parsed.getTime())) {
       return parsed.toISOString().split('T')[0];
@@ -1331,7 +1344,7 @@ function exportExcel() {
     showToast("No data in the ledger to export!", true);
     return;
   }
-  
+
   try {
     // Format rows for Excel export
     const excelRows = DATA.map((item, index) => ({
@@ -1351,12 +1364,12 @@ function exportExcel() {
     const worksheet = XLSX.utils.json_to_sheet(excelRows);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Insurance Register");
-    
+
     // Save file
     const targetYear = document.getElementById('targetYearFilter').value;
     const filename = `Insurance_Register_Ledger_${targetYear !== 'all' ? targetYear : 'All'}.xlsx`;
     XLSX.writeFile(workbook, filename);
-    
+
     showToast("Excel spreadsheet downloaded successfully!");
     logActivity(`📤 Exported Excel spreadsheet: "${filename}"`, "info");
   } catch(err) {
@@ -1389,7 +1402,7 @@ function triggerJSONBackupSelect() {
 function handleJSONBackupSelect(input) {
   const file = input.files[0];
   if (!file) return;
-  
+
   const reader = new FileReader();
   reader.onload = function(e) {
     try {
@@ -1398,13 +1411,13 @@ function handleJSONBackupSelect(input) {
         showToast("Invalid backup file! Must be a list of records.", true);
         return;
       }
-      
+
       const isValid = parsed.length === 0 || parsed.every(item => item && typeof item === 'object' && ('name' in item) && ('vehicle' in item));
       if (!isValid) {
         showToast("Incorrect ledger backup structure!", true);
         return;
       }
-      
+
       if (confirm(`You are importing a backup with ${parsed.length} policies. Would you like to OVERWRITE your current database?\n\n(Click 'OK' to OVERWRITE entirely, or click 'Cancel' to MERGE/APPEND records to your current list).`)) {
         // Overwrite
         DATA = parsed;
@@ -1415,9 +1428,9 @@ function handleJSONBackupSelect(input) {
         // Merge/Append
         const initialLength = DATA.length;
         parsed.forEach(newItem => {
-          const exists = DATA.some(oldItem => 
-            oldItem.name === newItem.name && 
-            oldItem.plate === newItem.plate && 
+          const exists = DATA.some(oldItem =>
+            oldItem.name === newItem.name &&
+            oldItem.plate === newItem.plate &&
             oldItem.end_date === newItem.end_date
           );
           if (!exists) {
@@ -1430,7 +1443,7 @@ function handleJSONBackupSelect(input) {
         logActivity(`💾 Merged: Appended ${addedCount} new client files from backup.`, "info");
         showToast(`Merged: Added ${addedCount} records.`);
       }
-      
+
       setTimeout(() => applyFiltersAndStats(), 200);
       input.value = '';
     } catch(err) {
@@ -1445,7 +1458,7 @@ function handleJSONBackupSelect(input) {
 // MESSAGE TEMPLATING SYSTEM
 // ==============================================
 function openTemplateModal() {
-  document.getElementById('messageTemplateInput').value = localStorage.getItem('whatsapp_template');
+  document.getElementById('messageTemplateInput').value = localStorage.getItem('panghat_whatsapp_template');
   updateTemplatePreview();
   openModal('templateModal');
 }
@@ -1462,7 +1475,7 @@ function updateTemplatePreview() {
     daysLeft: 3,
     notes: "Awaiting client response"
   };
-  
+
   const statusStr = `will expire in 3 days on ${formatDate(mockItem.end_date)}`;
 
   const preview = template
@@ -1481,7 +1494,7 @@ function updateTemplatePreview() {
 
 function saveMessageTemplate() {
   const template = document.getElementById('messageTemplateInput').value;
-  localStorage.setItem('whatsapp_template', template);
+  localStorage.setItem('panghat_whatsapp_template', template);
   closeModal('templateModal');
   showToast("WhatsApp message template saved successfully!");
   logActivity("💬 Custom WhatsApp reminder message template updated.", "info");
@@ -1494,9 +1507,9 @@ function wipeEntireRegister() {
 
   const finishLocalWipe = () => {
     DATA = [];
-    localStorage.removeItem('insurance_ledger');
-    localStorage.removeItem('insurance_ledger_backup');
-    localStorage.removeItem('waSent');
+    localStorage.removeItem('panghat_insurance_ledger');
+    localStorage.removeItem('panghat_insurance_ledger_backup');
+    localStorage.removeItem('panghat_waSent');
     const selectAll = document.getElementById('selectAllCheckbox');
     if (selectAll) selectAll.checked = false;
     applyFiltersAndStats();
@@ -1523,7 +1536,7 @@ function wipeEntireRegister() {
     showToast("Deleting all cloud records...", false);
     (async () => {
       try {
-        const snapshot = await firestoreInstance.collection('policies').get();
+        const snapshot = await firestoreInstance.collection(FIREBASE_COLLECTION).get();
         for (const doc of snapshot.docs) {
           const data = doc.data();
           if (data.policy_doc && data.policy_doc.url) {
@@ -1578,42 +1591,42 @@ window.addEventListener('click', (e) => {
 // SECURITY LOCK & OTP GATEWAY CONTROLLER
 // ==============================================
 function checkSecurityAccess() {
-  localStorage.setItem('MMC_SECURITY_SETUP', 'true');
-  localStorage.setItem('MMC_SECURITY_PASSWORD', MASTER_PASSWORD);
-  const isSetup = localStorage.getItem('MMC_SECURITY_SETUP') === "true";
-  
+  localStorage.setItem('PANGHAT_SECURITY_SETUP', 'true');
+  localStorage.setItem('PANGHAT_SECURITY_PASSWORD', MASTER_PASSWORD);
+  const isSetup = localStorage.getItem('PANGHAT_SECURITY_SETUP') === "true";
+
   if (!isSetup) {
     // Silently pre-load the user details inside local settings!
-    localStorage.setItem('MMC_SECURITY_SETUP', 'true');
-    localStorage.setItem('MMC_SECURITY_EMAIL', 'shrey00557@gmail.com');
-    localStorage.setItem('MMC_SECURITY_PHONE', '9824500557');
-    localStorage.setItem('MMC_SECURITY_PASSWORD', 'Shrey@2711'); // Default Master Backup Unlock Key!
+    localStorage.setItem('PANGHAT_SECURITY_SETUP', 'true');
+    localStorage.setItem('PANGHAT_SECURITY_EMAIL', 'shrey00557@gmail.com');
+    localStorage.setItem('PANGHAT_SECURITY_PHONE', '9824500557');
+    localStorage.setItem('PANGHAT_SECURITY_PASSWORD', 'Shrey@2711'); // Default Master Backup Unlock Key!
     logActivity("🔑 Security initialized: Credentials loaded for shrey00557@gmail.com & 9824500557.", "info");
-  } else if (localStorage.getItem('MMC_SECURITY_PASSWORD') === 'Midasmoneycare@2026' || localStorage.getItem('MMC_SECURITY_PASSWORD') === 'Panghatgiftshop@2026') {
+  } else if (localStorage.getItem('PANGHAT_SECURITY_PASSWORD') === 'Midasmoneycare@2026' || localStorage.getItem('PANGHAT_SECURITY_PASSWORD') === 'Panghatgiftshop@2026') {
     // Upgrade existing default password to the new requested master key
-    localStorage.setItem('MMC_SECURITY_PASSWORD', 'Shrey@2711');
+    localStorage.setItem('PANGHAT_SECURITY_PASSWORD', 'Shrey@2711');
     logActivity("🔑 Security updated: Master Backup Unlock Key changed to Shrey@2711.", "info");
   }
-  
+
   const overlay = document.getElementById('securityOverlay');
   overlay.style.display = 'flex';
   document.getElementById('securityLockScreen').style.display = 'flex';
   document.getElementById('backupPasswordInput').value = '';
   setTimeout(() => document.getElementById('backupPasswordInput').focus(), 50);
-  
+
   // Display masked credentials on the dispatch button!
   const maskedEmail = "shr***57@gmail.com";
   const maskedPhone = "******0557";
   const maskedCredentialsLabel = document.getElementById('maskedCredentialsLabel');
   if (maskedCredentialsLabel) maskedCredentialsLabel.textContent = `${maskedEmail} & ${maskedPhone}`;
-  
+
   // Reset OTP input state
   backToOtpMethods();
 }
 
 function submitSecuritySetup() {
-  localStorage.setItem('MMC_SECURITY_SETUP', 'true');
-  localStorage.setItem('MMC_SECURITY_PASSWORD', MASTER_PASSWORD);
+  localStorage.setItem('PANGHAT_SECURITY_SETUP', 'true');
+  localStorage.setItem('PANGHAT_SECURITY_PASSWORD', MASTER_PASSWORD);
   document.getElementById('securityOverlay').style.display = 'none';
   showToast("Password access enabled successfully!");
   return;
@@ -1621,17 +1634,17 @@ function submitSecuritySetup() {
   const email = document.getElementById('setupEmail').value.trim();
   const phone = document.getElementById('setupPhone').value.trim();
   const password = document.getElementById('setupPassword').value.trim();
-  
+
   if (!email || !phone || !password) {
     showToast("Please fill in all security configuration fields!", true);
     return;
   }
-  
-  localStorage.setItem('MMC_SECURITY_SETUP', 'true');
-  localStorage.setItem('MMC_SECURITY_EMAIL', email);
-  localStorage.setItem('MMC_SECURITY_PHONE', phone);
-  localStorage.setItem('MMC_SECURITY_PASSWORD', password);
-  
+
+  localStorage.setItem('PANGHAT_SECURITY_SETUP', 'true');
+  localStorage.setItem('PANGHAT_SECURITY_EMAIL', email);
+  localStorage.setItem('PANGHAT_SECURITY_PHONE', phone);
+  localStorage.setItem('PANGHAT_SECURITY_PASSWORD', password);
+
   document.getElementById('securityOverlay').style.display = 'none';
   showToast("Security Lock enabled successfully!");
 }
@@ -1642,18 +1655,18 @@ function sendAuthOTP(method) {
   const otp = Math.floor(100000 + Math.random() * 900000);
   window.ACTIVE_OTP = otp;
   window.ACTIVE_OTP_TIME = Date.now();
-  
-  const regEmail = localStorage.getItem('MMC_SECURITY_EMAIL') || 'shrey00557@gmail.com';
-  const regPhone = localStorage.getItem('MMC_SECURITY_PHONE') || '9824500557';
-  
+
+  const regEmail = localStorage.getItem('PANGHAT_SECURITY_EMAIL') || 'shrey00557@gmail.com';
+  const regPhone = localStorage.getItem('PANGHAT_SECURITY_PHONE') || '9824500557';
+
   let sentRealEmail = false;
   let sentRealSms = false;
-  
+
   // 1. EmailJS (Real Email OTP)
-  const emailJsPublicKey = localStorage.getItem('MMC_EMAILJS_PUBLIC_KEY');
-  const emailJsServiceId = localStorage.getItem('MMC_EMAILJS_SERVICE_ID');
-  const emailJsTemplateId = localStorage.getItem('MMC_EMAILJS_TEMPLATE_ID');
-  
+  const emailJsPublicKey = localStorage.getItem('PANGHAT_EMAILJS_PUBLIC_KEY');
+  const emailJsServiceId = localStorage.getItem('PANGHAT_EMAILJS_SERVICE_ID');
+  const emailJsTemplateId = localStorage.getItem('PANGHAT_EMAILJS_TEMPLATE_ID');
+
   if (emailJsPublicKey && emailJsServiceId && emailJsTemplateId) {
     try {
       sentRealEmail = true;
@@ -1672,12 +1685,12 @@ function sendAuthOTP(method) {
       console.error("EmailJS init failed: ", ex);
     }
   }
-  
+
   // 2. Twilio (Real SMS/WhatsApp OTP)
-  const twilioSid = localStorage.getItem('MMC_TWILIO_SID');
-  const twilioToken = localStorage.getItem('MMC_TWILIO_TOKEN');
-  const twilioNumber = localStorage.getItem('MMC_TWILIO_NUMBER');
-  
+  const twilioSid = localStorage.getItem('PANGHAT_TWILIO_SID');
+  const twilioToken = localStorage.getItem('PANGHAT_TWILIO_TOKEN');
+  const twilioNumber = localStorage.getItem('PANGHAT_TWILIO_NUMBER');
+
   if (twilioSid && twilioToken && twilioNumber) {
     try {
       sentRealSms = true;
@@ -1687,7 +1700,7 @@ function sendAuthOTP(method) {
       body.append('To', regPhone.startsWith('+') ? regPhone : '+91' + regPhone);
       body.append('From', twilioNumber);
       body.append('Body', `Panghat Gift Shop verification code: ${otp}`);
-      
+
       fetch(url, {
         method: 'POST',
         headers: {
@@ -1708,10 +1721,10 @@ function sendAuthOTP(method) {
       console.error("Twilio send failed: ", ex);
     }
   }
-  
+
   // Toast & Local Mode alert
   document.getElementById('otpStatusAlert').textContent = `Verification OTP sent to your registered Email & Phone!`;
-  
+
   // Trigger simulated fallback if no API keys configured
   if (!sentRealEmail && !sentRealSms) {
     showToast(`🔑 Local Mode OTP: ${otp}`, false);
@@ -1721,11 +1734,11 @@ function sendAuthOTP(method) {
   } else {
     showToast("Verification code dispatched to both channels!");
   }
-  
+
   // Toggle screens
   document.getElementById('otpMethodsBlock').style.display = 'none';
   document.getElementById('otpInputBlock').style.display = 'flex';
-  
+
   // Clear cell inputs & focus
   for (let i = 1; i <= 6; i++) {
     const cell = document.getElementById(`otpCell${i}`);
@@ -1761,18 +1774,18 @@ function verifyAuthOTP() {
   for (let i = 1; i <= 6; i++) {
     enteredCode += document.getElementById(`otpCell${i}`).value.trim();
   }
-  
+
   if (enteredCode.length < 6) {
     showToast("Please enter the complete 6-digit OTP code!", true);
     return;
   }
-  
+
   const elapsed = (Date.now() - window.ACTIVE_OTP_TIME) / 1000;
   if (elapsed > 300) { // 5 mins limit
     showToast("OTP has expired! Request a new code.", true);
     return;
   }
-  
+
   if (enteredCode === String(window.ACTIVE_OTP)) {
     // Authenticated!
     document.getElementById('securityOverlay').style.display = 'none';
@@ -1780,7 +1793,7 @@ function verifyAuthOTP() {
     logActivity("🔓 Authentication cleared. Access granted via OTP verification.", "info");
   } else {
     showToast("Invalid verification code! Try again.", true);
-    
+
     // Flash cells in red to indicate error
     for (let i = 1; i <= 6; i++) {
       const cell = document.getElementById(`otpCell${i}`);
@@ -1798,13 +1811,13 @@ function verifyAuthOTP() {
 
 function verifyBackupPassword() {
   const enteredPass = document.getElementById('backupPasswordInput').value.trim();
-  const actualPass = localStorage.getItem('MMC_SECURITY_PASSWORD');
-  
+  const actualPass = localStorage.getItem('PANGHAT_SECURITY_PASSWORD');
+
   if (!enteredPass) {
     showToast("Enter your backup master password!", true);
     return;
   }
-  
+
   if (enteredPass === actualPass) {
     document.getElementById('securityOverlay').style.display = 'none';
     showToast("Registry unlocked successfully!");
@@ -1829,22 +1842,22 @@ function backToOtpMethods() {
 // Security API Settings Modal controls
 function openSecuritySettingsModal() {
   // Load owner details
-  document.getElementById('settingsOwnerPassword').value = localStorage.getItem('MMC_SECURITY_PASSWORD') || MASTER_PASSWORD;
-  
+  document.getElementById('settingsOwnerPassword').value = localStorage.getItem('PANGHAT_SECURITY_PASSWORD') || MASTER_PASSWORD;
+
   openModal('securitySettingsModal');
 }
 
 function saveSecuritySettings() {
   const password = document.getElementById('settingsOwnerPassword').value.trim();
-  
+
   if (password !== MASTER_PASSWORD) {
     showToast("Master password must remain shrey@2711.", true);
     return;
   }
-  
+
   // Save credentials
-  localStorage.setItem('MMC_SECURITY_PASSWORD', MASTER_PASSWORD);
-  
+  localStorage.setItem('PANGHAT_SECURITY_PASSWORD', MASTER_PASSWORD);
+
   closeModal('securitySettingsModal');
   showToast("Security and cloud settings saved successfully!");
   logActivity("🔐 Credentials Update: Gateway keys and owner configuration modified.", "info");
@@ -1873,12 +1886,12 @@ function initFirebaseConnection(configChanged = false) {
       badge.style.color = 'var(--text-muted)';
       badge.style.borderColor = 'var(--border)';
     }
-    
+
     if (firebaseUnsubscribeListener) {
       firebaseUnsubscribeListener();
       firebaseUnsubscribeListener = null;
     }
-    
+
     if (configChanged) {
       logActivity("ℹ️ Cloud Sync disabled. Offline IndexedDB mode active.", "info");
       loadAllRecordsFromDB(); // Reload local records to restore standard flow
@@ -1971,7 +1984,7 @@ function subscribeToFirebaseLiveUpdates() {
     firebaseUnsubscribeListener();
   }
 
-  firebaseUnsubscribeListener = firestoreInstance.collection('policies')
+  firebaseUnsubscribeListener = firestoreInstance.collection(FIREBASE_COLLECTION)
     .onSnapshot((snapshot) => {
       if (dbInstance) {
         const transaction = dbInstance.transaction([STORE_NAME], 'readwrite');
@@ -1994,7 +2007,7 @@ function subscribeToFirebaseLiveUpdates() {
             store.delete(cloudItem.id);
             hasChanges = true;
             // Clean up from Firestore
-            firestoreInstance.collection('policies').doc(doc.id).delete().catch(()=>{});
+            firestoreInstance.collection(FIREBASE_COLLECTION).doc(doc.id).delete().catch(()=>{});
             return;
           }
 
@@ -2098,7 +2111,7 @@ async function bulkSyncLocalToFirebase() {
 
   const transaction = dbInstance.transaction([STORE_NAME], 'readonly');
   const store = transaction.objectStore(STORE_NAME);
-  
+
   store.getAll().onsuccess = async function(e) {
     const localRecords = e.target.result || [];
     if (localRecords.length === 0) return;
@@ -2108,13 +2121,13 @@ async function bulkSyncLocalToFirebase() {
       let syncAdded = 0;
 
       for (const record of localRecords) {
-        const querySnapshot = await firestoreInstance.collection('policies')
+        const querySnapshot = await firestoreInstance.collection(FIREBASE_COLLECTION)
           .where('plate', '==', record.plate)
           .where('end_date', '==', record.end_date)
           .get();
 
         if (querySnapshot.empty) {
-          const newDocRef = firestoreInstance.collection('policies').doc();
+          const newDocRef = firestoreInstance.collection(FIREBASE_COLLECTION).doc();
           const cloudEntry = { ...record };
           delete cloudEntry.id;
 
@@ -2123,7 +2136,7 @@ async function bulkSyncLocalToFirebase() {
             const url = await uploadFileToFirebaseStorage(newDocRef.id, record.policy_doc, 'policy_doc');
             cloudEntry.policy_doc = { name: record.policy_doc.name, type: record.policy_doc.type, url };
           }
-          
+
           if (record.kyc_docs && Array.isArray(record.kyc_docs)) {
             const cloudKycDocs = [];
             for (let i = 0; i < record.kyc_docs.length; i++) {
@@ -2158,7 +2171,7 @@ async function uploadFileToFirebaseStorage(policyId, fileObj, customName) {
   if (!firebaseStorageInstance) return "";
   try {
     const storageRef = firebaseStorageInstance.ref();
-    const fileRef = storageRef.child(`policies/${policyId}/${customName}`);
+    const fileRef = storageRef.child(`${FIREBASE_STORAGE_ROOT}/${policyId}/${customName}`);
     const uploadTask = await fileRef.putString(fileObj.data, 'data_url');
     const downloadUrl = await uploadTask.ref.getDownloadURL();
     return downloadUrl;
@@ -2185,4 +2198,8 @@ document.addEventListener('DOMContentLoaded', () => {
   initDatabase();
   updateSimulatedDate();
   checkSecurityAccess();
+
+  // Start live clock - updates every second
+  updateLiveDateTime();
+  setInterval(updateLiveDateTime, 1000);
 });
