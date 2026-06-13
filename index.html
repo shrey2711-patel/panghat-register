@@ -546,21 +546,30 @@
 
   /* Insurance Provider Tags */
   .ins-badge {
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 700;
     padding: 3px 8px;
     border-radius: 4px;
     text-transform: uppercase;
     display: inline-block;
-    background: #f5f5f5;
-    border: 1px solid #dcdcdc;
-    color: var(--text-muted);
+    background: #64748b;
+    border: 1px solid #475569;
+    color: #ffffff;
   }
-  .ins-badge.tata { background: #000000; border-color: #000000; color: #ffffff; }
-  .ins-badge.sbi { background: #333333; border-color: #333333; color: #ffffff; }
-  .ins-badge.bajaj { background: #666666; border-color: #666666; color: #ffffff; }
-  .ins-badge.digit { background: #999999; border-color: #999999; color: #000000; }
-  .ins-badge.newindia { background: #cccccc; border-color: #cccccc; color: #000000; }
+  .ins-badge.tata, .ins-badge.tataaig { background: #00a3e0; border-color: #008cc0; color: #ffffff; }
+  .ins-badge.sbi { background: #0083ca; border-color: #0070ac; color: #ffffff; }
+  .ins-badge.bajaj, .ins-badge.bajajalj, .ins-badge.bajajallianz { background: #005fa7; border-color: #004d88; color: #ffffff; }
+  .ins-badge.digit, .ins-badge.godigit { background: #ff6b35; border-color: #e55a2b; color: #ffffff; }
+  .ins-badge.newindia, .ins-badge.newindiaassurance { background: #10b981; border-color: #059669; color: #ffffff; }
+  .ins-badge.reliance { background: #004b87; border-color: #003c6d; color: #ffffff; }
+  .ins-badge.hdfc, .ins-badge.hdfcergo { background: #1e3a8a; border-color: #172554; color: #ffffff; }
+  .ins-badge.icici, .ins-badge.icicilombard { background: #9d174d; border-color: #831843; color: #ffffff; }
+  .ins-badge.kotak { background: #e11d48; border-color: #be123c; color: #ffffff; }
+  .ins-badge.national { background: #059669; border-color: #047857; color: #ffffff; }
+  .ins-badge.iffco, .ins-badge.iffcotokio { background: #0d9488; border-color: #0f766e; color: #ffffff; }
+  .ins-badge.chola, .ins-badge.cholamandalam { background: #d97706; border-color: #b45309; color: #ffffff; }
+  .ins-badge.royalsundaram { background: #4f46e5; border-color: #4338ca; color: #ffffff; }
+  .ins-badge.unitedindia { background: #7c3aed; border-color: #6d28d9; color: #ffffff; }
 
   /* Remarks/Notes Cell expansion */
   .remarks-cell {
@@ -3075,17 +3084,51 @@ function renderAnalyticsCharts() {
   
   // Custom provider color mapping matching tag classes
   const providerColors = {
-    'TATA': '#000000',
-    'SBI': '#333333',
-    'BAJAJ': '#666666',
-    'DIGIT': '#999999',
-    'NEW INDIA': '#cccccc',
-    'NEWINDIA': '#cccccc',
-    'UNKNOWN': '#e5e5e5'
+    'TATA': '#00a3e0',        // Tata Sky Blue
+    'SBI': '#0083ca',         // SBI Teal/Blue
+    'BAJAJ': '#005fa7',       // Bajaj Royal Blue
+    'DIGIT': '#ff6b35',       // Digit Bright Orange
+    'NEW INDIA': '#10b981',   // New India Emerald Green
+    'NEWINDIA': '#10b981',    // New India Assurance Emerald Green
+    'RELIANCE': '#004b87',    // Reliance Blue
+    'ICICI': '#9d174d',       // ICICI Maroon/Pink
+    'HDFC': '#1e40af',        // HDFC Deep Blue
+    'KOTAK': '#e11d48',       // Kotak Red
+    'NATIONAL': '#059669',    // National Green
+    'IFFCO': '#0d9488',       // IFFCO Teal
+    'CHOLA': '#d97706',       // Chola Amber
+    'ROYAL SUNDARAM': '#4f46e5', // Indigo
+    'UNITED INDIA': '#7c3aed', // Purple
+    'UNKNOWN': '#94a3b8'      // Slate gray
   };
 
-  const defaultColors = ['#000000', '#1c1c1c', '#383838', '#555555', '#717171', '#8d8d8d', '#aaaaaa', '#c6c6c6', '#e3e3e3'];
-  const chartColors = providerLabels.map((lbl, idx) => providerColors[lbl] || defaultColors[idx % defaultColors.length]);
+  const defaultColors = [
+    '#e07a5f', // Peach
+    '#81b29a', // Teal
+    '#f2cc8f', // Apricot/Yellow
+    '#3d405b', // Indigo
+    '#e76f51', // Coral
+    '#2a9d8f', // Green-Teal
+    '#e9c46a', // Gold
+    '#f4a261', // Orange
+    '#457b9d', // Steel Blue
+    '#7209b7', // Purple
+    '#f72585', // Vibrant Pink
+    '#4cc9f0'  // Bright Blue
+  ];
+  
+  const hashCode = str => {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    return hash;
+  };
+
+  const chartColors = providerLabels.map(lbl => {
+    const cleaned = lbl.toUpperCase().trim();
+    return providerColors[cleaned] || defaultColors[Math.abs(hashCode(cleaned)) % defaultColors.length];
+  });
 
   document.getElementById('chartProviderTotal').textContent = `${activeItems.length} Total Policies`;
 
@@ -3146,7 +3189,7 @@ function renderAnalyticsCharts() {
 
   const urgencyLabels = ['Expired', 'Due Today', 'Urgent (≤3d)', 'Incoming (≤7d)', 'Safe (>7d)'];
   const urgencyData = [expired, today, urgent, incoming, safe];
-  const urgencyColors = ['#000000', '#222222', '#555555', '#888888', '#cccccc'];
+  const urgencyColors = ['#ef4444', '#f97316', '#f59e0b', '#3b82f6', '#10b981'];
 
   document.getElementById('chartUrgencyTotal').textContent = `Urgent Policies: ${expired + today + urgent}`;
 
@@ -3224,8 +3267,8 @@ function renderAnalyticsCharts() {
         {
           label: 'Premium Expiring (₹)',
           data: monthlyPremiums,
-          backgroundColor: 'rgba(51, 51, 51, 0.75)',
-          hoverBackgroundColor: 'rgba(0, 0, 0, 0.95)',
+          backgroundColor: 'rgba(224, 122, 95, 0.85)',
+          hoverBackgroundColor: '#e07a5f',
           borderRadius: 6,
           yAxisID: 'yPremium',
           borderWidth: 0
@@ -3234,13 +3277,14 @@ function renderAnalyticsCharts() {
           label: 'Policy Count',
           data: monthlyCounts,
           type: 'line',
-          borderColor: '#000000',
-          backgroundColor: 'rgba(0, 0, 0, 0.05)',
+          borderColor: '#81b29a',
+          backgroundColor: 'rgba(129, 178, 154, 0.15)',
           borderWidth: 3,
           tension: 0.35,
           yAxisID: 'yCount',
-          pointBackgroundColor: '#000000',
-          pointRadius: 4
+          pointBackgroundColor: '#81b29a',
+          pointRadius: 4,
+          fill: true
         }
       ]
     },

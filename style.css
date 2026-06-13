@@ -521,21 +521,30 @@ td {
 
 /* Insurance Provider Tags */
 .ins-badge {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
   padding: 3px 8px;
   border-radius: 4px;
   text-transform: uppercase;
   display: inline-block;
-  background: #f5f5f5;
-  border: 1px solid #dcdcdc;
-  color: var(--text-muted);
+  background: #64748b;
+  border: 1px solid #475569;
+  color: #ffffff;
 }
-.ins-badge.tata { background: #000000; border-color: #000000; color: #ffffff; }
-.ins-badge.sbi { background: #333333; border-color: #333333; color: #ffffff; }
-.ins-badge.bajaj { background: #666666; border-color: #666666; color: #ffffff; }
-.ins-badge.digit { background: #999999; border-color: #999999; color: #000000; }
-.ins-badge.newindia { background: #cccccc; border-color: #cccccc; color: #000000; }
+.ins-badge.tata, .ins-badge.tataaig { background: #00a3e0; border-color: #008cc0; color: #ffffff; }
+.ins-badge.sbi { background: #0083ca; border-color: #0070ac; color: #ffffff; }
+.ins-badge.bajaj, .ins-badge.bajajalj, .ins-badge.bajajallianz { background: #005fa7; border-color: #004d88; color: #ffffff; }
+.ins-badge.digit, .ins-badge.godigit { background: #ff6b35; border-color: #e55a2b; color: #ffffff; }
+.ins-badge.newindia, .ins-badge.newindiaassurance { background: #10b981; border-color: #059669; color: #ffffff; }
+.ins-badge.reliance { background: #004b87; border-color: #003c6d; color: #ffffff; }
+.ins-badge.hdfc, .ins-badge.hdfcergo { background: #1e3a8a; border-color: #172554; color: #ffffff; }
+.ins-badge.icici, .ins-badge.icicilombard { background: #9d174d; border-color: #831843; color: #ffffff; }
+.ins-badge.kotak { background: #e11d48; border-color: #be123c; color: #ffffff; }
+.ins-badge.national { background: #059669; border-color: #047857; color: #ffffff; }
+.ins-badge.iffco, .ins-badge.iffcotokio { background: #0d9488; border-color: #0f766e; color: #ffffff; }
+.ins-badge.chola, .ins-badge.cholamandalam { background: #d97706; border-color: #b45309; color: #ffffff; }
+.ins-badge.royalsundaram { background: #4f46e5; border-color: #4338ca; color: #ffffff; }
+.ins-badge.unitedindia { background: #7c3aed; border-color: #6d28d9; color: #ffffff; }
 
 /* Remarks/Notes Cell expansion */
 .remarks-cell {
