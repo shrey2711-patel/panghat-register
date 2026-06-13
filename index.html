@@ -1517,7 +1517,6 @@
       <button class="nav-btn" onclick="openAddModal()"><span class="stack-cell"><span style="color:var(--text);font-weight:600;"><i class="fa-solid fa-plus" style="color:var(--accent);"></i> New Daily Entry</span></span></button>
       <button class="nav-btn" onclick="exportExcel()"><span class="stack-cell"><span style="color:var(--text);font-weight:600;"><i class="fa-solid fa-file-excel" style="color:var(--accent);"></i> Export Excel Sheet</span></span></button>
       <button class="nav-btn" onclick="openTemplateModal()"><span class="stack-cell"><span style="color:var(--text);font-weight:600;"><i class="fa-brands fa-whatsapp" style="color:var(--accent);"></i> Edit Message Template</span></span></button>
-      <button class="nav-btn" onclick="openSecuritySettingsModal()"><span class="stack-cell"><span style="color:var(--text);font-weight:600;"><i class="fa-solid fa-cloud" style="color:var(--amber);"></i> Firebase Cloud Sync Settings</span></span></button>
       <button class="nav-btn" onclick="downloadJSONBackup()"><span class="stack-cell"><span style="color:var(--text);font-weight:600;"><i class="fa-solid fa-file-arrow-down" style="color:var(--purple);"></i> Download Ledger Backup</span></span></button>
       <button class="nav-btn" onclick="triggerJSONBackupSelect()"><span class="stack-cell"><span style="color:var(--text);font-weight:600;"><i class="fa-solid fa-file-arrow-up" style="color:var(--blue);"></i> Restore Ledger Backup</span></span></button>
       <button class="nav-btn" onclick="wipeEntireRegister()"><span class="stack-cell"><span style="color:var(--red);font-weight:600;"><i class="fa-solid fa-trash-can" style="color:var(--red);"></i> Wipe Entire Register</span></span></button>
@@ -1897,61 +1896,12 @@
 <div class="modal-overlay" id="securitySettingsModal">
   <div class="modal" style="max-width: 580px;">
     <div class="modal-header">
-      <h2><i class="fa-solid fa-cloud-arrow-up" style="color:var(--amber);"></i> Firebase Cloud Sync Settings</h2>
+      <h2><i class="fab fa-google-drive" style="color:var(--orange);"></i> Google Drive Storage Settings</h2>
       <button class="modal-close" onclick="closeModal('securitySettingsModal')"><i class="fa-solid fa-xmark"></i></button>
     </div>
     <div class="modal-body">
-      <!-- Google Firebase Cloud Sync -->
-      <div style="padding-bottom:6px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-          <span style="font-size:12.5px; font-weight:700; color:var(--text);"><i class="fa-solid fa-circle-nodes" style="color:var(--accent);"></i> Real-time Cloud Synchronization</span>
-          <label style="display:flex; align-items:center; gap:6px; font-size:11px; cursor:pointer; font-weight: 600;">
-            <input type="checkbox" id="settingsFirebaseEnabled" style="cursor:pointer;" onchange="toggleFirebaseInputs(this.checked)">
-            Enable Cloud Sync
-          </label>
-        </div>
-        <p style="font-size:10.5px; color:var(--text-muted); margin-bottom:10px;">Sync policies, PDFs, and KYC documents in real time across multiple computers or mobile phones for free! If you leave these credentials blank while active, we will automatically set up a fast public demo database for you.</p>
-        
-        <div id="firebaseConfigFields" style="display:none;">
-          <div class="form-row">
-            <div class="form-group">
-              <label>API Key</label>
-              <input type="password" class="form-input" id="settingsFirebaseApiKey" placeholder="e.g. AIzaSy...">
-            </div>
-            <div class="form-group">
-              <label>Project ID</label>
-              <input type="text" class="form-input" id="settingsFirebaseProjectId" placeholder="e.g. panghatgiftshop">
-            </div>
-          </div>
-          <div class="form-row" style="margin-top:10px;">
-            <div class="form-group">
-              <label>Auth Domain</label>
-              <input type="text" class="form-input" id="settingsFirebaseAuthDomain" placeholder="e.g. panghatgiftshop.firebaseapp.com">
-            </div>
-            <div class="form-group">
-              <label>Storage Bucket</label>
-              <input type="text" class="form-input" id="settingsFirebaseStorageBucket" placeholder="e.g. panghatgiftshop.appspot.com">
-            </div>
-          </div>
-          <div class="form-row" style="margin-top:10px;">
-            <div class="form-group">
-              <label>Messaging Sender ID</label>
-              <input type="text" class="form-input" id="settingsFirebaseSenderId" placeholder="e.g. 123456789">
-            </div>
-            <div class="form-group">
-              <label>App ID</label>
-              <input type="text" class="form-input" id="settingsFirebaseAppId" placeholder="e.g. 1:123:web:abc">
-            </div>
-          </div>
-          <div style="margin-top:12px; display:flex; gap:10px;">
-            <button type="button" class="btn btn-secondary" onclick="testFirebaseCloudConnection()" style="font-size:11px; padding:6px 12px; height:auto; width:auto; border-color:var(--amber); color:var(--amber); background:rgba(217,119,6,0.05);"><i class="fa-solid fa-circle-nodes"></i> Test Connection</button>
-            <button type="button" class="btn btn-secondary" onclick="syncLocalToCloud()" id="btnSyncLocalToCloud" style="font-size:11px; padding:6px 12px; height:auto; width:auto; border-color:var(--purple); color:var(--purple); background:rgba(124,58,237,0.05);"><i class="fa-solid fa-cloud-arrow-up"></i> Upload Local Data</button>
-          </div>
-        </div>
-      </div>
-      
       <!-- Google Drive File Upload -->
-      <div style="padding-top:14px; margin-top:14px; border-top:1px dashed var(--border);">
+      <div>
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
           <span style="font-size:12.5px; font-weight:700; color:var(--text);"><i class="fab fa-google-drive" style="color:var(--orange);"></i> Google Drive Storage</span>
           <label style="display:flex; align-items:center; gap:6px; font-size:11px; cursor:pointer; font-weight: 600;">
@@ -1979,7 +1929,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal('securitySettingsModal')">Cancel</button>
-      <button class="btn btn-primary" onclick="saveSecuritySettings()"><i class="fa-solid fa-floppy-disk"></i> Save Cloud Sync Settings</button>
+      <button class="btn btn-primary" onclick="saveSecuritySettings()"><i class="fa-solid fa-floppy-disk"></i> Save Settings</button>
     </div>
   </div>
 </div>
@@ -1991,6 +1941,21 @@
 </div>
 
 <script>
+// =================================================================
+// GOOGLE FIREBASE CONFIGURATION (Edit this section to change sync keys)
+// =================================================================
+const FIREBASE_CONFIG = {
+  enabled: true, // Set to true to enable real-time cloud sync, false for offline local mode
+  apiKey: "AIzaSyCP0aG1KnrQEvSHY4Os1o0secaKIe4T4zo",
+  authDomain: "panghat-register.firebaseapp.com",
+  projectId: "panghat-register",
+  storageBucket: "panghat-register.firebasestorage.app",
+  messagingSenderId: "737134243462",
+  appId: "1:737134243462:web:b0e671e410d4f6f0c2eb07",
+  measurementId: "G-55Y15XYWGP"
+};
+// =================================================================
+
 // Auto-Cache Buster Version Verification
 const CURRENT_VERSION = "1.2.0";
 
@@ -2151,7 +2116,7 @@ function loadAllRecordsFromDB() {
     applyFiltersAndStats();
     
     // Cloud Sync pull check
-    const isCloudEnabled = localStorage.getItem('MMC_FIREBASE_ENABLED') === "true";
+    const isCloudEnabled = FIREBASE_CONFIG.enabled;
     if (isCloudEnabled && initFirebase()) {
       logActivity("☁️ Connecting to cloud registry sync...", "info");
       
@@ -2291,7 +2256,7 @@ function fetchRecords(store) {
       saveAllToIndexedDB(false, false); // Save kept ones locally (no need to sync back to cloud since they are already there)
       
       // Delete removed ones from cloud
-      const isCloudEnabled = localStorage.getItem('MMC_FIREBASE_ENABLED') === "true";
+      const isCloudEnabled = FIREBASE_CONFIG.enabled;
       if (isCloudEnabled && firebaseInitialized) {
         removedRecords.forEach(item => {
           if (item.id) {
@@ -2344,7 +2309,7 @@ function saveAllToIndexedDB(syncToCloud = false, isOverwrite = false) {
         if (syncToCloud) {
           if (isOverwrite || item._isNew) {
             delete item._isNew; // clean up temp flag
-            const isCloudEnabled = localStorage.getItem('MMC_FIREBASE_ENABLED') === "true";
+            const isCloudEnabled = FIREBASE_CONFIG.enabled;
             if (isCloudEnabled && firebaseInitialized) {
               uploadPolicyToFirebase(item).catch(err => {
                 console.error("Auto-sync error during saveAllToIndexedDB:", err);
@@ -2757,7 +2722,7 @@ async function submitAddEntry() {
     saveDatabase(); // reduntant fallback
     
     // Cloud Sync write
-    const isCloudEnabled = localStorage.getItem('MMC_FIREBASE_ENABLED') === "true";
+    const isCloudEnabled = FIREBASE_CONFIG.enabled;
     if (isCloudEnabled && firebaseInitialized) {
       uploadPolicyToFirebase(newEntry).catch(err => {
         console.error("Cloud upload error:", err);
@@ -2877,7 +2842,7 @@ async function submitEditEntry() {
     saveDatabase(); // redundant fallback
     
     // Cloud Sync write
-    const isCloudEnabled = localStorage.getItem('MMC_FIREBASE_ENABLED') === "true";
+    const isCloudEnabled = FIREBASE_CONFIG.enabled;
     if (isCloudEnabled && firebaseInitialized) {
       uploadPolicyToFirebase(updatedEntry).catch(err => {
         console.error("Cloud update error:", err);
@@ -2909,7 +2874,7 @@ function deleteEntry(idx) {
     
     req.onsuccess = function() {
       // Cloud Sync delete
-      const isCloudEnabled = localStorage.getItem('MMC_FIREBASE_ENABLED') === "true";
+      const isCloudEnabled = FIREBASE_CONFIG.enabled;
       if (isCloudEnabled && firebaseInitialized) {
         dbCloud.collection("policies").doc(String(dbId)).delete().catch(()=>{});
         if (storageCloud) {
@@ -2953,7 +2918,7 @@ function deleteSelected() {
       const req = store.delete(dbId);
       req.onsuccess = function() {
         // Cloud Sync delete
-        const isCloudEnabled = localStorage.getItem('MMC_FIREBASE_ENABLED') === "true";
+        const isCloudEnabled = FIREBASE_CONFIG.enabled;
         if (isCloudEnabled && firebaseInitialized) {
           dbCloud.collection("policies").doc(String(dbId)).delete().catch(()=>{});
           if (storageCloud) {
@@ -3676,7 +3641,7 @@ function parseExcelFile(file) {
 
       if (mode === 'overwrite') {
         (async () => {
-          const isCloudEnabled = localStorage.getItem('MMC_FIREBASE_ENABLED') === "true";
+          const isCloudEnabled = FIREBASE_CONFIG.enabled;
           if (isCloudEnabled && firebaseInitialized) {
             showToast("☁️ Clearing Cloud database for overwrite...");
             await clearCloudDatabase();
@@ -3879,7 +3844,7 @@ function handleJSONBackupSelect(input) {
       if (confirm(`You are importing a backup with ${parsed.length} policies. Would you like to OVERWRITE your current database?\n\n(Click 'OK' to OVERWRITE entirely, or click 'Cancel' to MERGE/APPEND records to your current list).`)) {
         // Overwrite
         (async () => {
-          const isCloudEnabled = localStorage.getItem('MMC_FIREBASE_ENABLED') === "true";
+          const isCloudEnabled = FIREBASE_CONFIG.enabled;
           if (isCloudEnabled && firebaseInitialized) {
             showToast("☁️ Clearing Cloud database for overwrite...");
             await clearCloudDatabase();
@@ -3976,7 +3941,7 @@ function wipeEntireRegister() {
       localStorage.removeItem('insurance_ledger_backup');
       
       // Clear Firestore
-      const isCloudEnabled = localStorage.getItem('MMC_FIREBASE_ENABLED') === "true";
+      const isCloudEnabled = FIREBASE_CONFIG.enabled;
       if (isCloudEnabled && firebaseInitialized) {
         showToast("🗑️ Wiping Cloud Sync Database...");
         await clearCloudDatabase();
@@ -4048,19 +4013,8 @@ window.addEventListener('click', (e) => {
 
 
 // Security API Settings Modal controls
+// Security API Settings Modal controls
 function openSecuritySettingsModal() {
-  // Load Firebase Config
-  const fbEnabled = localStorage.getItem('MMC_FIREBASE_ENABLED') === "true";
-  document.getElementById('settingsFirebaseEnabled').checked = fbEnabled;
-  toggleFirebaseInputs(fbEnabled);
-  
-  document.getElementById('settingsFirebaseApiKey').value = localStorage.getItem('MMC_FIREBASE_API_KEY') || '';
-  document.getElementById('settingsFirebaseProjectId').value = localStorage.getItem('MMC_FIREBASE_PROJECT_ID') || '';
-  document.getElementById('settingsFirebaseAuthDomain').value = localStorage.getItem('MMC_FIREBASE_AUTH_DOMAIN') || '';
-  document.getElementById('settingsFirebaseStorageBucket').value = localStorage.getItem('MMC_FIREBASE_STORAGE_BUCKET') || '';
-  document.getElementById('settingsFirebaseSenderId').value = localStorage.getItem('MMC_FIREBASE_SENDER_ID') || '';
-  document.getElementById('settingsFirebaseAppId').value = localStorage.getItem('MMC_FIREBASE_APP_ID') || '';
-  
   // Load Google Drive Config
   const gdEnabled = localStorage.getItem('MMC_GDRIVE_ENABLED') === "true";
   document.getElementById('settingsGoogleDriveEnabled').checked = gdEnabled;
@@ -4073,26 +4027,11 @@ function openSecuritySettingsModal() {
 }
 
 function saveSecuritySettings() {
-  // Save Firebase configuration
-  const fbEnabled = document.getElementById('settingsFirebaseEnabled').checked;
-  localStorage.setItem('MMC_FIREBASE_ENABLED', fbEnabled ? "true" : "false");
-  localStorage.setItem('MMC_FIREBASE_API_KEY', document.getElementById('settingsFirebaseApiKey').value.trim());
-  localStorage.setItem('MMC_FIREBASE_PROJECT_ID', document.getElementById('settingsFirebaseProjectId').value.trim());
-  localStorage.setItem('MMC_FIREBASE_AUTH_DOMAIN', document.getElementById('settingsFirebaseAuthDomain').value.trim());
-  localStorage.setItem('MMC_FIREBASE_STORAGE_BUCKET', document.getElementById('settingsFirebaseStorageBucket').value.trim());
-  localStorage.setItem('MMC_FIREBASE_SENDER_ID', document.getElementById('settingsFirebaseSenderId').value.trim());
-  localStorage.setItem('MMC_FIREBASE_APP_ID', document.getElementById('settingsFirebaseAppId').value.trim());
-  
   // Save Google Drive configuration
   const gdEnabled = document.getElementById('settingsGoogleDriveEnabled').checked;
   localStorage.setItem('MMC_GDRIVE_ENABLED', gdEnabled ? "true" : "false");
   localStorage.setItem('MMC_GDRIVE_WEBAPP_URL', document.getElementById('settingsGoogleDriveWebAppUrl').value.trim());
   localStorage.setItem('MMC_GDRIVE_FOLDER_ID', document.getElementById('settingsGoogleDriveFolderId').value.trim());
-  
-  // Re-initialize Firebase if enabled
-  if (fbEnabled) {
-    initFirebase();
-  }
   
   closeModal('securitySettingsModal');
   showToast("Security and Storage settings saved successfully!");
@@ -4102,31 +4041,24 @@ function saveSecuritySettings() {
 // ==============================================
 // GOOGLE FIREBASE CLOUD SYNC CONTROLLER
 // ==============================================
-const DEMO_FIREBASE_CONFIG = {
-  apiKey: "AIzaSyCP0aG1KnrQEvSHY4Os1o0secaKIe4T4zo",
-  authDomain: "panghat-register.firebaseapp.com",
-  projectId: "panghat-register",
-  storageBucket: "panghat-register.firebasestorage.app",
-  messagingSenderId: "737134243462",
-  appId: "1:737134243462:web:b0e671e410d4f6f0c2eb07"
-};
 
 let firebaseInitialized = false;
 let dbCloud = null;
 let storageCloud = null;
 
 function initFirebase() {
-  const isCloudEnabled = localStorage.getItem('MMC_FIREBASE_ENABLED') === "true";
+  const isCloudEnabled = FIREBASE_CONFIG.enabled;
   if (!isCloudEnabled) return false;
   
-  const apiKey = localStorage.getItem('MMC_FIREBASE_API_KEY') || DEMO_FIREBASE_CONFIG.apiKey;
-  const projectId = localStorage.getItem('MMC_FIREBASE_PROJECT_ID') || DEMO_FIREBASE_CONFIG.projectId;
-  const authDomain = localStorage.getItem('MMC_FIREBASE_AUTH_DOMAIN') || DEMO_FIREBASE_CONFIG.authDomain;
-  const storageBucket = localStorage.getItem('MMC_FIREBASE_STORAGE_BUCKET') || DEMO_FIREBASE_CONFIG.storageBucket;
-  const messagingSenderId = localStorage.getItem('MMC_FIREBASE_SENDER_ID') || DEMO_FIREBASE_CONFIG.messagingSenderId;
-  const appId = localStorage.getItem('MMC_FIREBASE_APP_ID') || DEMO_FIREBASE_CONFIG.appId;
-  
-  const config = { apiKey, authDomain, projectId, storageBucket, messagingSenderId, appId };
+  const config = {
+    apiKey: FIREBASE_CONFIG.apiKey,
+    authDomain: FIREBASE_CONFIG.authDomain,
+    projectId: FIREBASE_CONFIG.projectId,
+    storageBucket: FIREBASE_CONFIG.storageBucket,
+    messagingSenderId: FIREBASE_CONFIG.messagingSenderId,
+    appId: FIREBASE_CONFIG.appId,
+    measurementId: FIREBASE_CONFIG.measurementId
+  };
   
   try {
     if (firebase.apps.length === 0) {
@@ -4145,17 +4077,6 @@ function initFirebase() {
   }
 }
 
-function toggleFirebaseInputs(enabled) {
-  const fields = document.getElementById('firebaseConfigFields');
-  if (fields) {
-    fields.style.display = enabled ? 'block' : 'none';
-  }
-  const syncBtn = document.getElementById('btnSyncLocalToCloud');
-  if (syncBtn) {
-    syncBtn.style.display = enabled ? 'inline-block' : 'none';
-  }
-}
-
 function toggleGoogleDriveInputs(enabled) {
   const fields = document.getElementById('googleDriveFields');
   if (fields) {
@@ -4163,37 +4084,8 @@ function toggleGoogleDriveInputs(enabled) {
   }
 }
 
-async function testFirebaseCloudConnection() {
-  const apiKey = document.getElementById('settingsFirebaseApiKey').value.trim() || DEMO_FIREBASE_CONFIG.apiKey;
-  const projectId = document.getElementById('settingsFirebaseProjectId').value.trim() || DEMO_FIREBASE_CONFIG.projectId;
-  const authDomain = document.getElementById('settingsFirebaseAuthDomain').value.trim() || DEMO_FIREBASE_CONFIG.authDomain;
-  const storageBucket = document.getElementById('settingsFirebaseStorageBucket').value.trim() || DEMO_FIREBASE_CONFIG.storageBucket;
-  const messagingSenderId = document.getElementById('settingsFirebaseSenderId').value.trim() || DEMO_FIREBASE_CONFIG.messagingSenderId;
-  const appId = document.getElementById('settingsFirebaseAppId').value.trim() || DEMO_FIREBASE_CONFIG.appId;
-  
-  const testConfig = { apiKey, authDomain, projectId, storageBucket, messagingSenderId, appId };
-  showToast("Testing Cloud Connection...");
-  
-  try {
-    const testAppName = "MMC_TEST_APP_" + Date.now();
-    const testApp = firebase.initializeApp(testConfig, testAppName);
-    const testDb = testApp.firestore();
-    
-    const testDocRef = testDb.collection("_connection_test").doc("ping");
-    await testDocRef.set({ timestamp: Date.now(), client: "Panghat Gift Shop" });
-    await testDocRef.delete();
-    await testApp.delete();
-    
-    showToast("✅ Firebase connection tested successfully! Ready for Cloud Sync.");
-    logActivity("☁️ Firebase test connection ping successful.", "info");
-  } catch(e) {
-    console.error("Firebase Test Connection Error:", e);
-    showToast("❌ Connection test failed! Please double check your keys.", true);
-  }
-}
-
 async function clearCloudDatabase() {
-  const isCloudEnabled = localStorage.getItem('MMC_FIREBASE_ENABLED') === "true";
+  const isCloudEnabled = FIREBASE_CONFIG.enabled;
   if (!isCloudEnabled || !firebaseInitialized) return;
   
   try {
@@ -4419,20 +4311,21 @@ async function syncLocalToCloud() {
     return;
   }
   
-  const fbEnabled = document.getElementById('settingsFirebaseEnabled').checked;
+  const fbEnabled = FIREBASE_CONFIG.enabled;
   if (!fbEnabled) {
     showToast("Please enable Cloud Sync first!", true);
     return;
   }
   
-  const apiKey = document.getElementById('settingsFirebaseApiKey').value.trim() || DEMO_FIREBASE_CONFIG.apiKey;
-  const projectId = document.getElementById('settingsFirebaseProjectId').value.trim() || DEMO_FIREBASE_CONFIG.projectId;
-  const authDomain = document.getElementById('settingsFirebaseAuthDomain').value.trim() || DEMO_FIREBASE_CONFIG.authDomain;
-  const storageBucket = document.getElementById('settingsFirebaseStorageBucket').value.trim() || DEMO_FIREBASE_CONFIG.storageBucket;
-  const messagingSenderId = document.getElementById('settingsFirebaseSenderId').value.trim() || DEMO_FIREBASE_CONFIG.messagingSenderId;
-  const appId = document.getElementById('settingsFirebaseAppId').value.trim() || DEMO_FIREBASE_CONFIG.appId;
-  
-  const config = { apiKey, authDomain, projectId, storageBucket, messagingSenderId, appId };
+  const config = {
+    apiKey: FIREBASE_CONFIG.apiKey,
+    authDomain: FIREBASE_CONFIG.authDomain,
+    projectId: FIREBASE_CONFIG.projectId,
+    storageBucket: FIREBASE_CONFIG.storageBucket,
+    messagingSenderId: FIREBASE_CONFIG.messagingSenderId,
+    appId: FIREBASE_CONFIG.appId,
+    measurementId: FIREBASE_CONFIG.measurementId
+  };
   
   try {
     if (firebase.apps.length === 0 || !firebaseInitialized) {
@@ -4447,9 +4340,11 @@ async function syncLocalToCloud() {
   }
   
   const btn = document.getElementById('btnSyncLocalToCloud');
-  const oldText = btn.innerHTML;
-  btn.disabled = true;
-  btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Uploading...`;
+  const oldText = btn ? btn.innerHTML : '';
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Uploading...`;
+  }
   
   let successCount = 0;
   showToast(`Starting upload of ${DATA.length} local records to Cloud...`);
@@ -4463,8 +4358,10 @@ async function syncLocalToCloud() {
     }
   }
   
-  btn.disabled = false;
-  btn.innerHTML = oldText;
+  if (btn) {
+    btn.disabled = false;
+    btn.innerHTML = oldText;
+  }
   
   showToast(`✅ Successfully uploaded ${successCount} of ${DATA.length} records!`);
   logActivity(`☁️ Manual Bulk Sync: Uploaded ${successCount} records to Firebase Cloud database.`, "info");
@@ -4528,34 +4425,16 @@ document.addEventListener('DOMContentLoaded', () => {
     console.error("Flatpickr initialization failed:", err);
   }
   
-  // Initialize Firebase Cloud Sync settings on first run (only if completely empty)
-  const fbEnabled = localStorage.getItem('MMC_FIREBASE_ENABLED');
-  const hasCustomKeys = localStorage.getItem('MMC_FIREBASE_API_KEY') && localStorage.getItem('MMC_FIREBASE_PROJECT_ID');
-  
-  // Only set defaults on first run - never overwrite user-configured keys
-  if (!fbEnabled || fbEnabled === 'undefined') {
-    // First time setup - enable cloud sync with demo config
-    localStorage.setItem('MMC_FIREBASE_ENABLED', 'true');
-    // Only set demo keys if user hasn't configured custom ones
-    if (!hasCustomKeys) {
-      localStorage.setItem('MMC_FIREBASE_API_KEY', 'AIzaSyCP0aG1KnrQEvSHY4Os1o0secaKIe4T4zo');
-      localStorage.setItem('MMC_FIREBASE_PROJECT_ID', 'panghat-register');
-      localStorage.setItem('MMC_FIREBASE_AUTH_DOMAIN', 'panghat-register.firebaseapp.com');
-      localStorage.setItem('MMC_FIREBASE_STORAGE_BUCKET', 'panghat-register.firebasestorage.app');
-      localStorage.setItem('MMC_FIREBASE_SENDER_ID', '737134243462');
-      localStorage.setItem('MMC_FIREBASE_APP_ID', '1:737134243462:web:b0e671e410d4f6f0c2eb07');
-    }
+  // Initialize Firebase immediately if enabled in code
+  if (FIREBASE_CONFIG.enabled) {
+    setTimeout(() => {
+      if (initFirebase()) {
+        logActivity("☁️ Cloud sync enabled - data will sync across all logged-in devices.", "info");
+      }
+    }, 800);
+  } else {
+    logActivity("ℹ️ Cloud Sync disabled. Offline mode active.", "info");
   }
-  
-  // NOTE: Keys are now persistent across reloads and will sync to all devices using the same Firebase config
-  logActivity("🔧 Firebase Cloud Sync initialized with stored credentials.", "info");
-  
-  // Initialize Firebase immediately so cross-device sync starts right away
-  setTimeout(() => {
-    if (initFirebase()) {
-      logActivity("☁️ Cloud sync enabled - data will sync across all logged-in devices.", "info");
-    }
-  }, 800);
 });
 </script>
 <!-- Hidden restore ledger backup selector -->

@@ -1,3 +1,18 @@
+// =================================================================
+// GOOGLE FIREBASE CONFIGURATION (Edit this section to change sync keys)
+// =================================================================
+const FIREBASE_CONFIG = {
+  enabled: true, // Set to true to enable real-time cloud sync, false for offline local mode
+  apiKey: "AIzaSyCP0aG1KnrQEvSHY4Os1o0secaKIe4T4zo",
+  authDomain: "panghat-register.firebaseapp.com",
+  projectId: "panghat-register",
+  storageBucket: "panghat-register.firebasestorage.app",
+  messagingSenderId: "737134243462",
+  appId: "1:737134243462:web:b0e671e410d4f6f0c2eb07",
+  measurementId: "G-55Y15XYWGP"
+};
+// =================================================================
+
 // INITIAL DATA MERGE (Base template provided + pre-prepared fields)
 const DEFAULT_RAW_DATA = [];
 
@@ -1811,24 +1826,10 @@ function backToOtpMethods() {
 }
 
 // Security API Settings Modal controls
+// Security API Settings Modal controls
 function openSecuritySettingsModal() {
   // Load owner details
   document.getElementById('settingsOwnerPassword').value = localStorage.getItem('MMC_SECURITY_PASSWORD') || MASTER_PASSWORD;
-  
-  // Load credentials
-  
-  // Load Firebase Config
-  const fbEnabled = localStorage.getItem('MMC_FIREBASE_ENABLED') === "true";
-  const fbEnabledCheckbox = document.getElementById('settingsFirebaseEnabled');
-  fbEnabledCheckbox.checked = fbEnabled;
-  document.getElementById('firebaseConfigFields').style.display = fbEnabled ? 'block' : 'none';
-  
-  document.getElementById('settingsFirebaseApiKey').value = localStorage.getItem('MMC_FIREBASE_API_KEY') || '';
-  document.getElementById('settingsFirebaseAuthDomain').value = localStorage.getItem('MMC_FIREBASE_AUTH_DOMAIN') || '';
-  document.getElementById('settingsFirebaseProjectId').value = localStorage.getItem('MMC_FIREBASE_PROJECT_ID') || '';
-  document.getElementById('settingsFirebaseStorageBucket').value = localStorage.getItem('MMC_FIREBASE_STORAGE_BUCKET') || '';
-  document.getElementById('settingsFirebaseSenderId').value = localStorage.getItem('MMC_FIREBASE_SENDER_ID') || '';
-  document.getElementById('settingsFirebaseAppId').value = localStorage.getItem('MMC_FIREBASE_APP_ID') || '';
   
   openModal('securitySettingsModal');
 }
@@ -1844,23 +1845,9 @@ function saveSecuritySettings() {
   // Save credentials
   localStorage.setItem('MMC_SECURITY_PASSWORD', MASTER_PASSWORD);
   
-  // Save Firebase Config
-  const fbEnabled = document.getElementById('settingsFirebaseEnabled').checked;
-  localStorage.setItem('MMC_FIREBASE_ENABLED', fbEnabled ? "true" : "false");
-  
-  localStorage.setItem('MMC_FIREBASE_API_KEY', document.getElementById('settingsFirebaseApiKey').value.trim());
-  localStorage.setItem('MMC_FIREBASE_AUTH_DOMAIN', document.getElementById('settingsFirebaseAuthDomain').value.trim());
-  localStorage.setItem('MMC_FIREBASE_PROJECT_ID', document.getElementById('settingsFirebaseProjectId').value.trim());
-  localStorage.setItem('MMC_FIREBASE_STORAGE_BUCKET', document.getElementById('settingsFirebaseStorageBucket').value.trim());
-  localStorage.setItem('MMC_FIREBASE_SENDER_ID', document.getElementById('settingsFirebaseSenderId').value.trim());
-  localStorage.setItem('MMC_FIREBASE_APP_ID', document.getElementById('settingsFirebaseAppId').value.trim());
-  
   closeModal('securitySettingsModal');
   showToast("Security and cloud settings saved successfully!");
   logActivity("🔐 Credentials Update: Gateway keys and owner configuration modified.", "info");
-  
-  // Reactively initialize/update Firebase connection
-  initFirebaseConnection(true);
 }
 
 // ==============================================
@@ -1874,17 +1861,11 @@ let cloudSyncActive = false;
 let firebaseUnsubscribeListener = null;
 
 function initFirebaseConnection(configChanged = false) {
-  const enabled = localStorage.getItem('MMC_FIREBASE_ENABLED') === "true";
-  const apiKey = localStorage.getItem('MMC_FIREBASE_API_KEY');
-  const authDomain = localStorage.getItem('MMC_FIREBASE_AUTH_DOMAIN');
-  const projectId = localStorage.getItem('MMC_FIREBASE_PROJECT_ID');
-  const storageBucket = localStorage.getItem('MMC_FIREBASE_STORAGE_BUCKET');
-  const messagingSenderId = localStorage.getItem('MMC_FIREBASE_SENDER_ID');
-  const appId = localStorage.getItem('MMC_FIREBASE_APP_ID');
+  const enabled = FIREBASE_CONFIG.enabled;
 
   const badge = document.getElementById('cloudSyncStatusBadge');
 
-  if (!enabled || !apiKey || !projectId) {
+  if (!enabled) {
     cloudSyncActive = false;
     if (badge) {
       badge.innerHTML = `<i class="fa-solid fa-cloud"></i> <span>Local Mode</span>`;
@@ -1913,12 +1894,13 @@ function initFirebaseConnection(configChanged = false) {
 
   try {
     const firebaseConfig = {
-      apiKey,
-      authDomain,
-      projectId,
-      storageBucket,
-      messagingSenderId,
-      appId
+      apiKey: FIREBASE_CONFIG.apiKey,
+      authDomain: FIREBASE_CONFIG.authDomain,
+      projectId: FIREBASE_CONFIG.projectId,
+      storageBucket: FIREBASE_CONFIG.storageBucket,
+      messagingSenderId: FIREBASE_CONFIG.messagingSenderId,
+      appId: FIREBASE_CONFIG.appId,
+      measurementId: FIREBASE_CONFIG.measurementId
     };
 
     if (firebase.apps.length > 0) {
@@ -2193,52 +2175,6 @@ async function deleteFileFromFirebaseStorage(fileUrl) {
     await fileRef.delete();
   } catch (error) {
     console.error("Firebase Storage file delete failed:", error);
-  }
-}
-
-function useSandboxFirebase() {
-  document.getElementById('settingsFirebaseApiKey').value = "AIzaSyAsn8D71tK-L3P8o4D9v1g_SandboxKey";
-  document.getElementById('settingsFirebaseAuthDomain').value = "panghat-gift-shop-sandbox.firebaseapp.com";
-  document.getElementById('settingsFirebaseProjectId').value = "panghat-gift-shop-sandbox";
-  document.getElementById('settingsFirebaseStorageBucket').value = "panghat-gift-shop-sandbox.appspot.com";
-  document.getElementById('settingsFirebaseSenderId').value = "987654321098";
-  document.getElementById('settingsFirebaseAppId').value = "1:987654321098:web:abcdef123456";
-  
-  showToast("Demo Sandbox keys preloaded! Click Save to execute.");
-}
-
-async function testFirebaseCloudConnection() {
-  const apiKey = document.getElementById('settingsFirebaseApiKey').value.trim();
-  const projectId = document.getElementById('settingsFirebaseProjectId').value.trim();
-  const authDomain = document.getElementById('settingsFirebaseAuthDomain').value.trim();
-  const storageBucket = document.getElementById('settingsFirebaseStorageBucket').value.trim();
-  const senderId = document.getElementById('settingsFirebaseSenderId').value.trim();
-  const appId = document.getElementById('settingsFirebaseAppId').value.trim();
-
-  if (!apiKey || !projectId) {
-    showToast("API Key and Project ID are required to run tests!", true);
-    return;
-  }
-
-  showToast("Verifying Cloud connection...");
-  
-  try {
-    const tempConfig = { apiKey, authDomain, projectId, storageBucket, messagingSenderId: senderId, appId };
-    const tempApp = firebase.initializeApp(tempConfig, "TempTestApp");
-    const tempAuth = tempApp.auth();
-    await tempAuth.signInAnonymously();
-    
-    const tempDb = tempApp.firestore();
-    await tempDb.collection('connection_tests').doc('test').set({
-      timestamp: Date.now(),
-      status: "Verified"
-    });
-    
-    showToast("✅ Connection successful! JWT Authorized.");
-    await tempApp.delete();
-  } catch (error) {
-    console.error("Cloud ping test failed:", error);
-    showToast("❌ Connection failed: " + error.message, true);
   }
 }
 
