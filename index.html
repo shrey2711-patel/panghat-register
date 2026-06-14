@@ -3392,43 +3392,71 @@ function resetSimulatedDate() {
 // -----------------------------------------------
 let _liveDateClockTimer = null;
 
+// Get today's date string in local timezone (YYYY-MM-DD), avoids UTC offset bugs
+function getLocalDateStr(date) {
+  const d = date || new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${dd}`;
+}
+
 function updateLiveDateLabel() {
   const isSimulating = !!localStorage.getItem('panghat_simulated_date');
+  const el = document.getElementById('todayDateLabel');
+  if (!el) return;
+
   if (isSimulating) {
-    // Show simulated date (already handled by updateSimulatedDate)
-    document.getElementById('todayDateLabel').textContent =
-      SIMULATED_TODAY.toLocaleDateString('en-IN', { weekday: 'short', day: '2-digit', month: 'long', year: 'numeric' });
+    // Show simulated date
+    el.textContent = SIMULATED_TODAY.toLocaleDateString('en-IN', {
+      weekday: 'long', day: '2-digit', month: 'long', year: 'numeric'
+    });
   } else {
-    // Show real live date
+    // Show REAL live date using local clock (no UTC offset issue)
     const now = new Date();
-    document.getElementById('todayDateLabel').textContent =
-      now.toLocaleDateString('en-IN', { weekday: 'short', day: '2-digit', month: 'long', year: 'numeric' });
-    
-    // Also keep SIMULATED_TODAY in sync with actual date
-    const todayStr = now.toISOString().split('T')[0];
-    SIMULATED_TODAY = new Date(todayStr);
-    SIMULATED_TODAY.setHours(0,0,0,0);
+    el.textContent = now.toLocaleDateString('en-IN', {
+      weekday: 'long', day: '2-digit', month: 'long', year: 'numeric'
+    });
+
+    // Keep SIMULATED_TODAY in sync with real local date
+    const todayStr = getLocalDateStr(now);
+    SIMULATED_TODAY = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    SIMULATED_TODAY.setHours(0, 0, 0, 0);
     const sim = document.getElementById('dateSimulator');
     if (sim) sim.value = todayStr;
   }
 }
 
 function startLiveClock() {
-  // Run immediately so the date shows at once
+  // On fresh page load — always clear stale simulated date from old sessions
+  // so the user sees the real current date immediately
+  const savedSim = localStorage.getItem('panghat_simulated_date');
+  if (savedSim) {
+    const savedDate = new Date(savedSim);
+    const today = new Date();
+    // If saved date is today → keep it (user intentionally simulating today)
+    // If it's any other day (stale) → clear it so real date shows
+    const savedStr = getLocalDateStr(savedDate);
+    const todayStr = getLocalDateStr(today);
+    if (savedStr !== todayStr) {
+      localStorage.removeItem('panghat_simulated_date');
+    }
+  }
+
+  // Show real date immediately
   updateLiveDateLabel();
-  
+
   // Clear any previous timer
   if (_liveDateClockTimer) clearInterval(_liveDateClockTimer);
-  
-  // Refresh every 60 seconds so the date auto-advances at midnight
+
+  // Tick every 30 seconds — updates date label & syncs at midnight
   _liveDateClockTimer = setInterval(() => {
     const isSimulating = !!localStorage.getItem('panghat_simulated_date');
     if (!isSimulating) {
       updateLiveDateLabel();
-      // Re-apply filters so expiry statuses update after midnight automatically
       applyFiltersAndStats();
     }
-  }, 60000);
+  }, 30000);
 }
 
 function setStatusFilter(filter, el) {
