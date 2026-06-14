@@ -3367,8 +3367,8 @@ function updateSimulatedDate() {
   SIMULATED_TODAY.setHours(0,0,0,0);
   localStorage.setItem('panghat_simulated_date', selectedDate);
   
-  // Update Header Date label
-  document.getElementById('todayDateLabel').textContent = SIMULATED_TODAY.toLocaleDateString('en-IN', { weekday: 'short', day: '2-digit', month: 'long', year: 'numeric' });
+  // Update Header Date label via unified function
+  updateLiveDateLabel();
   
   applyFiltersAndStats();
   logActivity(`⏰ Register calendar simulated to: ${formatDate(selectedDate)}`, "info");
@@ -3381,10 +3381,54 @@ function resetSimulatedDate() {
   
   SIMULATED_TODAY = new Date(todayStr);
   SIMULATED_TODAY.setHours(0,0,0,0);
-  document.getElementById('todayDateLabel').textContent = SIMULATED_TODAY.toLocaleDateString('en-IN', { weekday: 'short', day: '2-digit', month: 'long', year: 'numeric' });
+  updateLiveDateLabel();
   
   applyFiltersAndStats();
   logActivity("⏰ Simulated calendar reset back to current actual system time.", "info");
+}
+
+// -----------------------------------------------
+// LIVE DATE CLOCK — updates sidebar date every minute
+// -----------------------------------------------
+let _liveDateClockTimer = null;
+
+function updateLiveDateLabel() {
+  const isSimulating = !!localStorage.getItem('panghat_simulated_date');
+  if (isSimulating) {
+    // Show simulated date (already handled by updateSimulatedDate)
+    document.getElementById('todayDateLabel').textContent =
+      SIMULATED_TODAY.toLocaleDateString('en-IN', { weekday: 'short', day: '2-digit', month: 'long', year: 'numeric' });
+  } else {
+    // Show real live date
+    const now = new Date();
+    document.getElementById('todayDateLabel').textContent =
+      now.toLocaleDateString('en-IN', { weekday: 'short', day: '2-digit', month: 'long', year: 'numeric' });
+    
+    // Also keep SIMULATED_TODAY in sync with actual date
+    const todayStr = now.toISOString().split('T')[0];
+    SIMULATED_TODAY = new Date(todayStr);
+    SIMULATED_TODAY.setHours(0,0,0,0);
+    const sim = document.getElementById('dateSimulator');
+    if (sim) sim.value = todayStr;
+  }
+}
+
+function startLiveClock() {
+  // Run immediately so the date shows at once
+  updateLiveDateLabel();
+  
+  // Clear any previous timer
+  if (_liveDateClockTimer) clearInterval(_liveDateClockTimer);
+  
+  // Refresh every 60 seconds so the date auto-advances at midnight
+  _liveDateClockTimer = setInterval(() => {
+    const isSimulating = !!localStorage.getItem('panghat_simulated_date');
+    if (!isSimulating) {
+      updateLiveDateLabel();
+      // Re-apply filters so expiry statuses update after midnight automatically
+      applyFiltersAndStats();
+    }
+  }, 60000);
 }
 
 function setStatusFilter(filter, el) {
@@ -4529,7 +4573,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   populateYearFilter();
   initDatabase();
-  updateSimulatedDate();
+  startLiveClock();  // Show live date immediately on page load & keep it ticking
 
   // Initialize Flatpickr for start/end date inputs in add/edit modals
   try {
